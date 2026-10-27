@@ -95,3 +95,20 @@ def test_cache_reads_m1_payload():
     )
     page, _ = cache.get("stub", "beihai", date(2026, 10, 24))
     assert page.weather is None and page.extremes[0].height == 0.5
+
+
+def test_day_page_sidebars(client, service):
+    prefetch(service, days=6)
+    today = datetime.now(TZ).date()
+    r = client.get(f"/tides/jinhaiwan?date={today.isoformat()}")
+    assert "今天各站" in r.text and "金海湾 · 近 7 天" in r.text
+    # 侧栏 7 天都来自缓存，且当前站在“今天各站”里高亮
+    assert r.text.count("未缓存") == 0
+    assert '<li class="current">' in r.text
+
+
+def test_index_seven_day_matrix(client, service):
+    prefetch(service, days=6)
+    r = client.get("/")
+    assert "未来 7 天各站赶海指数" in r.text
+    assert r.text.count('class="heat-5') == 5 * 7  # stub 数据每天都是 5 星

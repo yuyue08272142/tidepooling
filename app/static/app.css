@@ -56,9 +56,13 @@ h2 { font-size: 16px; margin: 0 0 10px; }
   padding: 12px 16px;
   padding-top: max(12px, env(safe-area-inset-top));
 }
+.topbar-inner { max-width: 1320px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
 .topbar .brand { color: #fff; font-weight: 600; }
+.topnav { margin-left: auto; display: flex; gap: 14px; }
+.topnav a { color: rgba(255, 255, 255, 0.88); font-size: 14px; }
 
-.wrap { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 12px 16px; }
+@media (min-width: 820px) { .wrap { padding: 16px 24px; } }
 .card {
   background: var(--card);
   border-radius: 12px;
@@ -134,7 +138,7 @@ table.extremes { width: 100%; border-collapse: collapse; }
 
 .error h2 { color: var(--now); }
 
-.foot { max-width: 720px; margin: 0 auto; padding: 8px 16px 24px; font-size: 12px; color: var(--muted); }
+.foot { max-width: 1320px; margin: 0 auto; padding: 8px 24px 24px; font-size: 12px; color: var(--muted); }
 
 .advice { border-left: 4px solid var(--line); }
 .advice.level-5, .advice.level-4 { border-left-color: var(--low); }
@@ -172,3 +176,96 @@ table.extremes { width: 100%; border-collapse: collapse; }
 .cal-window { color: var(--fg); }
 .cal-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 12px; }
 .cal-side .badge { font-size: 12px; padding: 0 8px; }
+
+/* ---------- 站点日页：手机单列，按 order 排序 ---------- */
+.day-layout { display: flex; flex-direction: column; }
+.col-left, .col-main, .col-right, .pair { display: contents; }
+.o-head { order: 1; }
+.o-advice { order: 2; }
+.o-tides { order: 3; }
+.o-chart { order: 4; }
+.o-weather { order: 5; }
+.o-astro { order: 6; }
+.o-hourly { order: 7; }
+.o-week { order: 8; }
+.o-stations { display: none; }
+
+/* 平板：主栏 + 右栏 */
+@media (min-width: 820px) {
+  .day-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+  .col-main, .col-right { display: block; }
+  .chart { height: 320px; }
+  .hourly { grid-template-columns: repeat(8, 1fr); }
+}
+
+/* 桌面：左栏 + 主栏 + 右栏 */
+@media (min-width: 1180px) {
+  .day-layout { grid-template-columns: 240px minmax(0, 1fr) 300px; }
+  .col-left { display: block; position: sticky; top: 16px; }
+  .o-stations { display: block; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+  .chart { height: 360px; }
+  .hourly { grid-template-columns: repeat(12, 1fr); }
+}
+
+/* 侧栏里的紧凑列表：各站 / 近 7 天 */
+.mini-list { list-style: none; margin: 0; padding: 0; }
+.mini-list li { border-radius: 8px; }
+.mini-list li + li { margin-top: 2px; }
+.mini-list li.current { background: var(--sea-soft); }
+.mini-list a {
+  display: grid; grid-template-columns: 1fr auto; gap: 0 8px;
+  padding: 8px 10px; color: var(--fg);
+}
+.mini-list .mini-name { font-weight: 600; }
+.mini-list .stars { font-size: 13px; text-align: right; }
+.mini-list .mini-sub { grid-column: 1 / -1; font-size: 12px; }
+
+/* ---------- 首页 ---------- */
+.intro h1 { margin-bottom: 4px; }
+.intro p { margin: 0; }
+.station-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+.station-grid .card { margin-bottom: 0; }
+@media (min-width: 640px) { .station-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .station-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1280px) { .station-grid { grid-template-columns: repeat(5, 1fr); } }
+.station-card { display: block; color: var(--fg); border-top: 4px solid var(--line); }
+.station-card.level-5, .station-card.level-4 { border-top-color: var(--low); }
+.station-card.level-3 { border-top-color: var(--mid); }
+.station-card.veto { border-top-color: var(--big); }
+.station-card:hover { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); }
+.sc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sc-head .name { font-size: 18px; font-weight: 600; }
+.sc-stars { margin: 6px 0 10px; }
+.sc-stars .stars { font-size: 18px; }
+.sc-stars .verdict { font-size: 14px; color: var(--muted); }
+.station-card.veto .verdict { color: var(--big); }
+.sc-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
+.sc-facts div { background: var(--bg); border-radius: 8px; padding: 6px 8px; }
+.sc-facts dt { color: var(--muted); font-size: 12px; }
+.sc-facts dd { margin: 0; font-size: 15px; font-weight: 600; }
+.sc-facts .must { color: var(--big); }
+.sc-facts .wide { grid-column: 1 / -1; }
+.sc-weather { margin: 10px 0 0; font-size: 13px; }
+
+/* 未来 7 天总览表：窄屏在卡片内横向滚动 */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.matrix { width: 100%; min-width: 620px; border-collapse: separate; border-spacing: 4px; }
+.matrix th { font-weight: 500; font-size: 13px; text-align: center; line-height: 1.3; }
+.matrix tbody th { text-align: left; white-space: nowrap; padding-right: 8px; font-weight: 600; font-size: 14px; }
+/* 窄屏横向滑动时固定站点列 */
+.matrix tr > th:first-child { position: sticky; left: 0; z-index: 1; background: var(--card); }
+.matrix td { text-align: center; border-radius: 8px; background: var(--bg); padding: 0; }
+.matrix td a, .matrix td > span { display: flex; flex-direction: column; padding: 8px 4px; color: var(--fg); font-size: 12px; }
+.matrix td strong { font-size: 17px; }
+.matrix td.heat-5 { background: rgba(47, 158, 68, 0.32); }
+.matrix td.heat-4 { background: rgba(47, 158, 68, 0.18); }
+.matrix td.heat-3 { background: rgba(240, 140, 0, 0.16); }
+.matrix td.veto { background: rgba(201, 42, 42, 0.16); }
+
+/* ---------- 赶海日历：宽屏改成卡片网格 ---------- */
+@media (min-width: 820px) {
+  .cal { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+  .cal li { border: 1px solid var(--line); border-left-width: 4px; border-radius: 10px; }
+  .cal li:last-child { border-bottom: 1px solid var(--line); }
+}

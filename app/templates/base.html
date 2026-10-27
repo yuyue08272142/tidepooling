@@ -9,7 +9,13 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">🌊 北海赶海潮汐</a>
+    <div class="topbar-inner">
+      <a class="brand" href="/">🌊 北海赶海潮汐</a>
+      <nav class="topnav">
+        <a href="/">今日推荐</a>
+        <a href="/calendar/{{ station.id if station is defined else 'beihai' }}">赶海日历</a>
+      </nav>
+    </div>
   </header>
   <main class="wrap">
     {% block content %}{% endblock %}

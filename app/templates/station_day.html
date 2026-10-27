@@ -1,123 +1,182 @@
 {% extends "base.html" %}
 {% block title %}{{ station.name }}潮汐表 {{ day.isoformat() }} - 北海赶海潮汐{% endblock %}
 {% block content %}
-<section class="card head">
-  <div class="head-row">
-    <h1>{{ station.name }}潮汐表</h1>
-    <select id="station-select" aria-label="切换潮汐站">
-      {% for s in stations %}
-      <option value="{{ s.id }}" {% if s.id == station.id %}selected{% endif %}>{{ s.name }}</option>
+{#
+  桌面：左栏各站 | 中栏日期/建议/潮汐/曲线/逐时 | 右栏近 7 天/天气/日月
+  手机：三栏的 wrapper 用 display: contents 拆开，按 .o-* 的 order 排成一列
+#}
+<div class="day-layout">
+
+<aside class="col-left">
+  <section class="card o-stations">
+    <h2>今天各站</h2>
+    <ul class="mini-list">
+      {% for s2, d2 in station_rows %}
+      {% set sg2 = d2.suggestion if d2 else none %}
+      <li class="{% if s2.id == station.id %}current{% endif %}">
+        <a href="/tides/{{ s2.id }}?date={{ day.isoformat() }}">
+          <span class="mini-name">{{ s2.name }}</span>
+          {% if sg2 %}
+          <span class="stars">{{ sg2.stars|stars }}</span>
+          <span class="muted num mini-sub">{% if sg2.night %}夜 {% endif %}{{ sg2.window_start|hm }}–{{ sg2.window_end|hm }}</span>
+          {% else %}
+          <span class="muted mini-sub">查看潮汐</span>
+          {% endif %}
+        </a>
+      </li>
       {% endfor %}
-    </select>
-  </div>
-  <nav class="date-nav">
-    <a class="btn" href="?date={{ prev.isoformat() }}">‹ 前一天</a>
-    <input type="date" id="date-input" value="{{ day.isoformat() }}" min="{{ min_date.isoformat() }}" max="{{ max_date.isoformat() }}" aria-label="选择日期">
-    <a class="btn" href="?date={{ next.isoformat() }}">后一天 ›</a>
-  </nav>
-  <p class="muted center">
-    {{ day.isoformat() }} {{ day|weekday }}{% if is_today %} · 今天{% endif %}
-    {% if data %} · {{ data.astro.lunar.text }}{% if data.astro.lunar.jieqi %} · {{ data.astro.lunar.jieqi }}{% endif %}{% endif %}
-    · <a href="/calendar/{{ station.id }}">赶海日历</a>
-  </p>
-</section>
+    </ul>
+  </section>
+</aside>
 
-{% if error %}
-<section class="card error">
-  <h2>暂时取不到潮汐数据</h2>
-  <p>{{ error }}</p>
-  <p><a class="btn" href="?date={{ day.isoformat() }}">重试</a></p>
-</section>
-{% else %}
+<div class="col-main">
+  <section class="card head o-head">
+    <div class="head-row">
+      <h1>{{ station.name }}潮汐表</h1>
+      <select id="station-select" aria-label="切换潮汐站">
+        {% for s in stations %}
+        <option value="{{ s.id }}" {% if s.id == station.id %}selected{% endif %}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <nav class="date-nav">
+      <a class="btn" href="?date={{ prev.isoformat() }}">‹ 前一天</a>
+      <input type="date" id="date-input" value="{{ day.isoformat() }}" min="{{ min_date.isoformat() }}" max="{{ max_date.isoformat() }}" aria-label="选择日期">
+      <a class="btn" href="?date={{ next.isoformat() }}">后一天 ›</a>
+    </nav>
+    <p class="muted center">
+      {{ day.isoformat() }} {{ day|weekday }}{% if is_today %} · 今天{% endif %}
+      {% if data %} · {{ data.astro.lunar.text }}{% if data.astro.lunar.jieqi %} · {{ data.astro.lunar.jieqi }}{% endif %}{% endif %}
+      · <a href="/calendar/{{ station.id }}">赶海日历</a>
+    </p>
+  </section>
 
-{% set s = data.suggestion %}
-{% if s %}
-<section class="card advice level-{{ s.stars }}{% if s.verdict == '不宜赶海' %} veto{% endif %}">
-  <div class="advice-head">
-    <span class="stars" aria-label="{{ s.stars }} 星">{{ s.stars|stars }}</span>
-    <span class="verdict">{{ s.verdict }}</span>
-    <span class="score num">{{ s.score }} 分</span>
-  </div>
-  <dl class="window">
-    <div><dt>{% if s.night %}夜间{% endif %}最佳时段</dt><dd class="num">{{ s.window_start|hm }} – {{ s.window_end|hm }}</dd></div>
-    <div><dt>低潮</dt><dd class="num">{{ s.low.time|hm }} · {{ "%.2f"|format(s.low.height) }} m</dd></div>
-    <div><dt>开始返回</dt><dd class="num">{{ s.window_end|hm }}</dd></div>
-    <div class="must"><dt>最晚离开滩涂</dt><dd class="num">{{ s.leave_by|hm }}</dd></div>
-  </dl>
-  <ul class="reasons">
-    {% for r in s.reasons %}<li>{{ r }}</li>{% endfor %}
-  </ul>
-  <ul class="warnings">
-    {% for w in s.warnings %}<li>⚠️ {{ w }}</li>{% endfor %}
-  </ul>
-</section>
-{% endif %}
-
-<section class="card">
-  <div class="badges">
-    <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
-    <span class="badge">{{ data.astro.moon_phase }}</span>
-  </div>
-  <table class="extremes">
-    <thead><tr><th>潮汐</th><th>时间</th><th>潮高</th></tr></thead>
-    <tbody>
-    {% for e in data.extremes %}
-      <tr class="{{ e.kind }}">
-        <td>{{ "高潮" if e.kind == "high" else "低潮" }}</td>
-        <td class="num">{{ e.time|hm }}</td>
-        <td class="num">{{ "%.2f"|format(e.height) }} m</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-<section class="card">
-  <h2>潮汐曲线</h2>
-  <div id="tide-chart" class="chart" role="img" aria-label="{{ station.name }} {{ day.isoformat() }} 潮汐曲线"></div>
-  <p class="muted small">绿色为最佳赶海时段，红线为最晚离开时间，灰色阴影为夜间。曲线由高低潮时刻按余弦插值得到。</p>
-</section>
-
-<section class="card">
-  <h2>天气风浪</h2>
-  {% set w = data.weather %}
-  {% if w %}
-  <dl class="astro">
-    <div><dt>天气</dt><dd>{{ w.sky or "--" }}</dd></div>
-    <div><dt>风</dt><dd>{{ w.wind_dir }}{% if w.wind_level is not none %} {{ w.wind_level }}级{% endif %}</dd></div>
-    <div><dt>浪高</dt><dd class="num">{{ "%g"|format(w.wave_m) ~ " m" if w.wave_m is not none else "--" }}</dd></div>
-    <div><dt>气温</dt><dd class="num">{{ "%.0f"|format(w.air_temp) ~ "°C" if w.air_temp is not none else "--" }}</dd></div>
-    <div><dt>水温</dt><dd class="num">{{ "%.0f"|format(w.water_temp) ~ "°C" if w.water_temp is not none else "--" }}</dd></div>
-    <div><dt>气压</dt><dd class="num">{{ "%.0f"|format(w.pressure) ~ " hPa" if w.pressure is not none else "--" }}</dd></div>
-  </dl>
-  <p class="muted small">预报更新于 {{ data.weather_time.strftime("%m-%d %H:%M") }}，出发前请再看一下实时天气。</p>
+  {% if error %}
+  <section class="card error o-advice">
+    <h2>暂时取不到潮汐数据</h2>
+    <p>{{ error }}</p>
+    <p><a class="btn" href="?date={{ day.isoformat() }}">重试</a></p>
+  </section>
   {% else %}
-  <p class="muted">暂无天气预报。</p>
-  {% endif %}
-</section>
 
-<section class="card">
-  <h2>日月时刻</h2>
-  <dl class="astro">
-    <div><dt>日出</dt><dd>{{ data.astro.sunrise|hm }}</dd></div>
-    <div><dt>日落</dt><dd>{{ data.astro.sunset|hm }}</dd></div>
-    <div><dt>天亮</dt><dd>{{ data.astro.dawn|hm }}</dd></div>
-    <div><dt>天黑</dt><dd>{{ data.astro.dusk|hm }}</dd></div>
-    <div><dt>月出</dt><dd>{{ data.astro.moonrise|hm }}</dd></div>
-    <div><dt>月落</dt><dd>{{ data.astro.moonset|hm }}</dd></div>
-  </dl>
-</section>
+  <div class="pair">
+    {% set s = data.suggestion %}
+    {% if s %}
+    <section class="card advice o-advice level-{{ s.stars }}{% if s.verdict == '不宜赶海' %} veto{% endif %}">
+      <div class="advice-head">
+        <span class="stars" aria-label="{{ s.stars }} 星">{{ s.stars|stars }}</span>
+        <span class="verdict">{{ s.verdict }}</span>
+        <span class="score num">{{ s.score }} 分</span>
+      </div>
+      <dl class="window">
+        <div><dt>{% if s.night %}夜间{% endif %}最佳时段</dt><dd class="num">{{ s.window_start|hm }} – {{ s.window_end|hm }}</dd></div>
+        <div><dt>低潮</dt><dd class="num">{{ s.low.time|hm }} · {{ "%.2f"|format(s.low.height) }} m</dd></div>
+        <div><dt>开始返回</dt><dd class="num">{{ s.window_end|hm }}</dd></div>
+        <div class="must"><dt>最晚离开滩涂</dt><dd class="num">{{ s.leave_by|hm }}</dd></div>
+      </dl>
+      <ul class="reasons">
+        {% for r in s.reasons %}<li>{{ r }}</li>{% endfor %}
+      </ul>
+      <ul class="warnings">
+        {% for w in s.warnings %}<li>⚠️ {{ w }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
 
-<section class="card">
-  <h2>逐时潮高</h2>
-  <div class="hourly">
-    {% for t, h in data.hourly[:24] %}
-    <div class="cell"><span class="muted">{{ t.hour }}时</span><span class="num">{{ "%.2f"|format(h) if h is not none else "--" }}</span></div>
-    {% endfor %}
+    <section class="card o-tides">
+      <div class="badges">
+        <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
+        <span class="badge">{{ data.astro.moon_phase }}</span>
+      </div>
+      <table class="extremes">
+        <thead><tr><th>潮汐</th><th>时间</th><th>潮高</th></tr></thead>
+        <tbody>
+        {% for e in data.extremes %}
+          <tr class="{{ e.kind }}">
+            <td>{{ "高潮" if e.kind == "high" else "低潮" }}</td>
+            <td class="num">{{ e.time|hm }}</td>
+            <td class="num">{{ "%.2f"|format(e.height) }} m</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
   </div>
-  <p class="muted small">单位：米，相对当地潮高基准面。数据来源：{{ data.source }}</p>
-</section>
-{% endif %}
+
+  <section class="card o-chart">
+    <h2>潮汐曲线</h2>
+    <div id="tide-chart" class="chart" role="img" aria-label="{{ station.name }} {{ day.isoformat() }} 潮汐曲线"></div>
+    <p class="muted small">绿色为最佳赶海时段，红线为最晚离开时间，灰色阴影为夜间。曲线由高低潮时刻按余弦插值得到。</p>
+  </section>
+
+  <section class="card o-hourly">
+    <h2>逐时潮高</h2>
+    <div class="hourly">
+      {% for t, h in data.hourly[:24] %}
+      <div class="cell"><span class="muted">{{ t.hour }}时</span><span class="num">{{ "%.2f"|format(h) if h is not none else "--" }}</span></div>
+      {% endfor %}
+    </div>
+    <p class="muted small">单位：米，相对当地潮高基准面。数据来源：{{ data.source }}</p>
+  </section>
+  {% endif %}
+</div>
+
+<aside class="col-right">
+  {% if data %}
+  <section class="card o-weather">
+    <h2>天气风浪</h2>
+    {% set w = data.weather %}
+    {% if w %}
+    <dl class="astro">
+      <div><dt>天气</dt><dd>{{ w.sky or "--" }}</dd></div>
+      <div><dt>风</dt><dd>{{ w.wind_dir }}{% if w.wind_level is not none %} {{ w.wind_level }}级{% endif %}</dd></div>
+      <div><dt>浪高</dt><dd class="num">{{ "%g"|format(w.wave_m) ~ " m" if w.wave_m is not none else "--" }}</dd></div>
+      <div><dt>气温</dt><dd class="num">{{ "%.0f"|format(w.air_temp) ~ "°C" if w.air_temp is not none else "--" }}</dd></div>
+      <div><dt>水温</dt><dd class="num">{{ "%.0f"|format(w.water_temp) ~ "°C" if w.water_temp is not none else "--" }}</dd></div>
+      <div><dt>气压</dt><dd class="num">{{ "%.0f"|format(w.pressure) if w.pressure is not none else "--" }}</dd></div>
+    </dl>
+    <p class="muted small">预报更新于 {{ data.weather_time.strftime("%m-%d %H:%M") }}，出发前请再看一下实时天气。</p>
+    {% else %}
+    <p class="muted">暂无天气预报。</p>
+    {% endif %}
+  </section>
+
+  <section class="card o-astro">
+    <h2>日月时刻</h2>
+    <dl class="astro">
+      <div><dt>日出</dt><dd>{{ data.astro.sunrise|hm }}</dd></div>
+      <div><dt>日落</dt><dd>{{ data.astro.sunset|hm }}</dd></div>
+      <div><dt>天亮</dt><dd>{{ data.astro.dawn|hm }}</dd></div>
+      <div><dt>天黑</dt><dd>{{ data.astro.dusk|hm }}</dd></div>
+      <div><dt>月出</dt><dd>{{ data.astro.moonrise|hm }}</dd></div>
+      <div><dt>月落</dt><dd>{{ data.astro.moonset|hm }}</dd></div>
+    </dl>
+  </section>
+  {% endif %}
+
+  <section class="card o-week">
+    <h2>{{ station.name }} · 近 7 天</h2>
+    <ul class="mini-list">
+      {% for d2, data2 in week %}
+      {% set sg2 = data2.suggestion if data2 else none %}
+      <li class="{% if d2 == day %}current{% endif %}">
+        <a href="?date={{ d2.isoformat() }}">
+          <span class="mini-name num">{{ d2.strftime("%m-%d") }} <span class="muted">{{ d2|weekday }}</span></span>
+          {% if sg2 %}
+          <span class="stars">{{ sg2.stars|stars }}</span>
+          <span class="muted num mini-sub">{% if sg2.night %}夜 {% endif %}{{ sg2.window_start|hm }}–{{ sg2.window_end|hm }} · {{ "%.1f"|format(sg2.low.height) }}m</span>
+          {% else %}
+          <span class="muted mini-sub">未缓存</span>
+          {% endif %}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="small"><a href="/calendar/{{ station.id }}">查看完整赶海日历 ›</a></p>
+  </section>
+</aside>
+
+</div>
 {% endblock %}
 
 {% block scripts %}

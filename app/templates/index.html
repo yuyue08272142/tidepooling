@@ -1,24 +1,69 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="card">
+<section class="card intro">
   <h1>今天去哪赶海</h1>
-  <p class="muted">{{ today.isoformat() }} {{ today|weekday }} · 广西北海市</p>
-  <ul class="station-list">
-    {% for s, d in rows %}
-    {% set sg = d.suggestion if d else none %}
-    <li>
-      <a href="/tides/{{ s.id }}?date={{ today.isoformat() }}">
-        <span class="name">{{ s.name }}</span>
-        {% if sg %}
-        <span class="stars small-stars level-{{ sg.stars }}" aria-label="{{ sg.stars }} 星">{{ sg.stars|stars }}</span>
-        <span class="go num">{% if sg.night %}夜 {% endif %}{{ sg.window_start|hm }}–{{ sg.window_end|hm }} ›</span>
-        {% else %}
-        <span class="go">查看潮汐 ›</span>
-        {% endif %}
-      </a>
-    </li>
-    {% endfor %}
-  </ul>
-  <p class="muted small">星级为当天最适合的一次低潮的赶海指数，时间为最佳时段。点站点名查看详情和赶海日历。</p>
+  <p class="muted">{{ today.isoformat() }} {{ today|weekday }} · 广西北海市 · 星级为当天最适合的一次低潮的赶海指数</p>
+</section>
+
+<div class="station-grid">
+  {% for s, d in rows %}
+  {% set sg = d.suggestion if d else none %}
+  <a class="card station-card{% if sg %} level-{{ sg.stars }}{% if sg.verdict == '不宜赶海' %} veto{% endif %}{% endif %}"
+     href="/tides/{{ s.id }}?date={{ today.isoformat() }}">
+    <div class="sc-head">
+      <span class="name">{{ s.name }}</span>
+      {% if d %}<span class="badge period-{{ d.astro.tide_period }}">{{ d.astro.tide_period }}</span>{% endif %}
+    </div>
+    {% if sg %}
+    <div class="sc-stars"><span class="stars">{{ sg.stars|stars }}</span> <span class="verdict">{{ sg.verdict }}</span></div>
+    <dl class="sc-facts">
+      <div class="wide"><dt>{% if sg.night %}夜间{% endif %}最佳时段</dt><dd class="num">{{ sg.window_start|hm }} – {{ sg.window_end|hm }}</dd></div>
+      <div><dt>低潮 {{ sg.low.time|hm }}</dt><dd class="num">{{ "%.2f"|format(sg.low.height) }} m</dd></div>
+      <div><dt>最晚离开</dt><dd class="num must">{{ sg.leave_by|hm }}</dd></div>
+    </dl>
+    {% if d.weather %}
+    <p class="sc-weather muted">{{ d.weather.sky }} · {{ d.weather.wind_dir }} {{ d.weather.wind_level }}级{% if d.weather.wave_m is not none %} · 浪 {{ "%g"|format(d.weather.wave_m) }}m{% endif %}</p>
+    {% endif %}
+    {% else %}
+    <p class="muted">数据未缓存，点开查看潮汐</p>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<section class="card">
+  <h2>未来 7 天各站赶海指数</h2>
+  <div class="table-scroll">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>站点</th>
+          {% for d in days %}
+          <th class="num">{{ d.strftime("%m-%d") }}<br><span class="muted">{% if d == today %}今天{% else %}{{ d|weekday }}{% endif %}</span></th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for s, datas in matrix %}
+        <tr>
+          <th><a href="/calendar/{{ s.id }}">{{ s.name }}</a></th>
+          {% for d in days %}
+          {% set dd = datas[loop.index0] %}
+          {% set sg = dd.suggestion if dd else none %}
+          <td class="{% if sg %}heat-{{ sg.stars }}{% if sg.verdict == '不宜赶海' %} veto{% endif %}{% endif %}">
+            {% if sg %}
+            <a href="/tides/{{ s.id }}?date={{ d.isoformat() }}">
+              <strong class="num">{{ sg.score }}</strong>
+              <span class="num">{% if sg.night %}夜{% endif %}{{ sg.window_start|hm }}</span>
+            </a>
+            {% else %}<span class="muted">--</span>{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small">格子里是赶海指数（满分 100）和最佳时段的开始时间，颜色越深越适合。点格子看当天详情。</p>
 </section>
 {% endblock %}

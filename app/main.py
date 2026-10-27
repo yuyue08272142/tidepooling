@@ -85,11 +85,24 @@ def create_app(service: TideService | None = None) -> FastAPI:
         except ProviderError:
             return None
 
+    def station_rows(day):
+        """各站某天的数据（只读缓存），用于首页和日页侧栏。"""
+        return [(s, cached_day(s, day)) for s in all_stations()]
+
+    def week(station, start):
+        """某站从 start 起 7 天（只读缓存）。"""
+        return [(d, cached_day(station, d)) for d in (start + timedelta(days=i) for i in range(7))]
+
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request):
         today = datetime.now(config.TZ).date()
-        rows = [(s, cached_day(s, today)) for s in all_stations()]
-        return templates.TemplateResponse(request, "index.html", {"rows": rows, "today": today})
+        days = [today + timedelta(days=i) for i in range(7)]
+        matrix = [(s, [d for _, d in week(s, today)]) for s in all_stations()]
+        return templates.TemplateResponse(
+            request,
+            "index.html",
+            {"rows": station_rows(today), "today": today, "days": days, "matrix": matrix},
+        )
 
     @app.get("/calendar/{station_id}", response_class=HTMLResponse)
     def calendar(request: Request, station_id: str):
@@ -128,6 +141,8 @@ def create_app(service: TideService | None = None) -> FastAPI:
                 "data": data,
                 "payload": serialize(data) if data else None,
                 "error": error,
+                "station_rows": station_rows(now.date()),
+                "week": week(station, now.date()),
             },
             status_code=200 if data else 502,
         )
