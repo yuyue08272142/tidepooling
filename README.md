@@ -38,7 +38,7 @@
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 python -m app.prefetch          # 预取各站未来 14 天潮汐和天气（首次约 3 分钟），建议每 6 小时用 cron 跑一次
-uvicorn app.main:app --port 8000
+uvicorn app.main:app --reload --port 8000   # --reload：改了 Python 代码自动重启
 # 打开 http://127.0.0.1:8000/
 pytest -q
 ```
