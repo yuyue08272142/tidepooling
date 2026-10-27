@@ -80,6 +80,8 @@ def create_app(service: TideService | None = None) -> FastAPI:
                 "prev": day - timedelta(days=1),
                 "next": day + timedelta(days=1),
                 "is_today": day == now.date(),
+                "min_date": now.date(),
+                "max_date": now.date() + timedelta(days=getattr(app.state.service.provider, "available_days", 14)),
                 "data": data,
                 "payload": serialize(data) if data else None,
                 "error": error,

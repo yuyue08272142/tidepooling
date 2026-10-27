@@ -1,10 +1,14 @@
 """从 tidescn.com 抓取单站单日的高低潮。
 
-注意：开发环境暂时无法访问 tidescn.com，下面的解析规则是按潮汐表页面的常见写法
-（“高潮/低潮 + 时间 + 潮高”）写的通用规则，尚未用真实页面校验。
-拿到真实页面后用本模块的命令行保存 HTML，再按实际结构收紧解析逻辑：
+页面结构（2026-10 核对）：
+- 日期在 `.tide_tile h1 span`，如“2026年10月24日 星期六”
+- 每条高低潮一个 `div.tide2`，文字如“05:23 满潮 2.6米”
+- 曲线的逐时数据是加密的，不使用；曲线由高低潮插值得到
 
-    python -m app.providers.tidescn 945 2026-10-24 --save tests/fixtures
+注意：只提供今天起 14 天内的数据。超出范围的日期不会报错，而是返回别的日期的页面，
+所以必须校验页面上的日期。
+
+调试：python -m app.providers.tidescn 945 2026-10-24 --save var/html
 """
 from __future__ import annotations
 
@@ -12,7 +16,7 @@ import argparse
 import re
 import threading
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -22,11 +26,10 @@ from .. import config
 from ..models import Station, TideExtreme
 from . import ProviderError
 
-_KIND = {"高潮": "high", "满潮": "high", "低潮": "low", "干潮": "low"}
-_TIME = r"([01]?\d|2[0-3])\s*[:：]\s*([0-5]\d)"
-_HEIGHT = r"(-?\d+(?:\.\d+)?)\s*(cm|CM|厘米|m|M|米)?"
-_KIND_FIRST = re.compile(rf"(高潮|满潮|低潮|干潮)\D{{0,12}}?{_TIME}\D{{0,12}}?{_HEIGHT}")
-_TIME_FIRST = re.compile(rf"{_TIME}\D{{0,12}}?{_HEIGHT}\s*\D{{0,6}}?(高潮|满潮|低潮|干潮)")
+AVAILABLE_DAYS = 14  # 页面日期选择器到 +15 天，但第 15 天页面没有数据（2026-10 核对）
+_KIND = {"满潮": "high", "高潮": "high", "干潮": "low", "低潮": "low"}
+_PAGE_DATE = re.compile(r"(\d{4})年(\d{1,2})月(\d{1,2})日")
+_ENTRY = re.compile(r"(\d{1,2})\s*[:：]\s*(\d{2})\s*(满潮|高潮|干潮|低潮)\s*(-?\d+(?:\.\d+)?)\s*(米|m|厘米|cm)?")
 
 
 def decode_html(content: bytes, content_type: str = "") -> str:
@@ -44,38 +47,38 @@ def decode_html(content: bytes, content_type: str = "") -> str:
         return content.decode("gb18030", errors="replace")
 
 
-def _to_metres(value: str, unit: str | None) -> float:
-    v = float(value)
-    if unit in ("cm", "CM", "厘米") or (unit is None and abs(v) > 15):
-        v /= 100
-    return round(v, 2)
-
-
-def _collect(text: str, day: date, kind_first: bool) -> list[TideExtreme]:
-    found: dict[datetime, TideExtreme] = {}
-    for m in (_KIND_FIRST if kind_first else _TIME_FIRST).finditer(text):
-        g = m.groups()
-        kind, hh, mm, val, unit = g if kind_first else (g[4], *g[:4])
-        t = datetime(day.year, day.month, day.day, int(hh), int(mm), tzinfo=config.TZ)
-        found.setdefault(t, TideExtreme(t, _to_metres(val, unit), _KIND[kind]))
-    return sorted(found.values(), key=lambda e: e.time)
-
-
 def parse_extremes(html: str, day: date) -> list[TideExtreme]:
-    text = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
-    # 两种写法分开解析：混在一起时“低潮”可能被错配到下一条记录的时间上
-    candidates = [_collect(text, day, kind_first) for kind_first in (True, False)]
-    candidates = [c for c in candidates if len(c) >= 2]
-    if not candidates:
-        raise ProviderError("页面中未识别到高低潮数据（解析规则可能需要按页面结构调整）")
-    for extremes in candidates:
-        if all(a.kind != b.kind for a, b in zip(extremes, extremes[1:])):
-            return extremes
-    raise ProviderError("识别出的高低潮不是交替出现，页面里可能混入了其他日期的数据")
+    soup = BeautifulSoup(html, "html.parser")
+
+    title = soup.select_one(".tide_tile h1")
+    m = _PAGE_DATE.search(title.get_text() if title else "")
+    if not m:
+        raise ProviderError("tidescn 页面结构有变化：找不到页面日期")
+    page_day = date(*map(int, m.groups()))
+    if page_day != day:
+        raise ProviderError(f"tidescn 没有 {day} 的数据（返回的是 {page_day}），只提供今天起 {AVAILABLE_DAYS} 天内的潮汐")
+
+    midnight = datetime(day.year, day.month, day.day, tzinfo=config.TZ)
+    extremes = []
+    for div in soup.select("div.tide2"):
+        m = _ENTRY.search(div.get_text(" ", strip=True))
+        if not m:
+            raise ProviderError(f"tidescn 页面结构有变化：无法解析“{div.get_text(' ', strip=True)}”")
+        hh, mm, kind, value, unit = m.groups()
+        height = float(value) / (100 if unit in ("厘米", "cm") else 1)
+        t = midnight + timedelta(hours=int(hh), minutes=int(mm))
+        extremes.append(TideExtreme(t, round(height, 2), _KIND[kind]))
+
+    extremes.sort(key=lambda e: e.time)
+    if not extremes:
+        raise ProviderError("tidescn 页面上没有高低潮数据")
+    return extremes
 
 
 class TidescnProvider:
     name = "tidescn.com"
+    label = "tidescn.com（数据源自国家海洋信息中心）"
+    available_days = AVAILABLE_DAYS
 
     def __init__(self, base_url: str = config.TIDESCN_BASE_URL, client: httpx.Client | None = None):
         self.base_url = base_url
@@ -86,6 +89,10 @@ class TidescnProvider:
         )
         self._lock = threading.Lock()
         self._last_request = 0.0
+
+    def available(self, day: date) -> bool:
+        today = datetime.now(config.TZ).date()
+        return today <= day <= today + timedelta(days=AVAILABLE_DAYS)
 
     def url(self, tidescn_id: int, day: date) -> str:
         return f"{self.base_url}/Tides/{tidescn_id}.html?date={day.isoformat()}"
@@ -107,6 +114,8 @@ class TidescnProvider:
     def fetch_extremes(self, station: Station, day: date) -> list[TideExtreme]:
         if station.tidescn_id is None:
             raise ProviderError(f"{station.name} 还没有配置 tidescn 站点编号")
+        if not self.available(day):
+            raise ProviderError(f"tidescn 只提供今天起 {AVAILABLE_DAYS} 天内的潮汐，{day} 不在范围内")
         return parse_extremes(self.fetch_html(station.tidescn_id, day), day)
 
 

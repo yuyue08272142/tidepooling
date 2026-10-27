@@ -11,14 +11,14 @@ from .conftest import StubProvider
 def test_index_lists_beihai_stations(client):
     r = client.get("/")
     assert r.status_code == 200
-    for name in ("北海", "涠洲岛", "铁山港"):
+    for name in ("北海港", "金海湾", "涠洲岛", "营盘港", "铁山港"):
         assert name in r.text
 
 
 def test_station_day_page(client):
     r = client.get("/tides/beihai?date=2026-10-24")
     assert r.status_code == 200
-    assert "北海潮汐表" in r.text and "农历九月十五" in r.text
+    assert "北海港潮汐表" in r.text and "农历九月十五" in r.text
     assert "?date=2026-10-23" in r.text and "?date=2026-10-25" in r.text
     assert "04:00" in r.text and "4.00 m" in r.text
 

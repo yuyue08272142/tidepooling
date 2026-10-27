@@ -12,7 +12,7 @@
   </div>
   <nav class="date-nav">
     <a class="btn" href="?date={{ prev.isoformat() }}">‹ 前一天</a>
-    <input type="date" id="date-input" value="{{ day.isoformat() }}" aria-label="选择日期">
+    <input type="date" id="date-input" value="{{ day.isoformat() }}" min="{{ min_date.isoformat() }}" max="{{ max_date.isoformat() }}" aria-label="选择日期">
     <a class="btn" href="?date={{ next.isoformat() }}">后一天 ›</a>
   </nav>
   <p class="muted center">

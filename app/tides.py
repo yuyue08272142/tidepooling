@@ -39,7 +39,7 @@ class TideService:
         return DayTides(
             station=station,
             day=day,
-            source=self.provider.name,
+            source=getattr(self.provider, "label", self.provider.name),
             extremes=today,
             hourly=sample(everything, start, end, timedelta(hours=1)),
             curve=sample(everything, start, end, timedelta(minutes=10)),

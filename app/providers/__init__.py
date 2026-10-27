@@ -11,7 +11,7 @@ class ProviderError(Exception):
 
 
 class TideProvider(Protocol):
-    name: str  # 显示给用户的数据来源，同时作为缓存 key
+    name: str  # 缓存 key；可另设 label 作为页面上显示的数据来源
 
     def fetch_extremes(self, station: Station, day: date) -> list[TideExtreme]:
         """返回该站当天（本地时间 0~24 时）的高低潮，按时间排序。"""
