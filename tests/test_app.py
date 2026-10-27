@@ -116,10 +116,13 @@ def test_day_page_sidebars(client, service):
     prefetch(service, days=6)
     today = datetime.now(TZ).date()
     r = client.get(f"/tides/jinhaiwan?date={today.isoformat()}")
-    assert "今天各站" in r.text and "金海湾 · 近 7 天" in r.text
-    # 侧栏 7 天都来自缓存，且当前站在“今天各站”里高亮
+    assert "今天各站" not in r.text and "金海湾 · 近 7 天" in r.text
+    # 近 7 天都来自缓存，且当天高亮
     assert r.text.count("未缓存") == 0
     assert '<li class="current">' in r.text
+    # 赶海建议和潮汐曲线在同一行（同一个 .pair 里，建议在前）
+    pair = r.text[r.text.index('<div class="pair'):r.text.index('o-hourly')]
+    assert pair.index("o-advice") < pair.index("o-chart")
 
 
 def test_index_seven_day_matrix(client, service):

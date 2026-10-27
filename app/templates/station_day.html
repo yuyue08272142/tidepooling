@@ -2,32 +2,10 @@
 {% block title %}{{ station.name }}潮汐表 {{ day.isoformat() }} - 北海赶海潮汐{% endblock %}
 {% block content %}
 {#
-  桌面：左栏各站 | 中栏日期/建议/潮汐/曲线/逐时 | 右栏近 7 天/天气/日月
-  手机：三栏的 wrapper 用 display: contents 拆开，按 .o-* 的 order 排成一列
+  桌面：主栏（日期 / 赶海建议 + 潮汐曲线并排 / 逐时）| 右栏（高低潮 / 天气 / 日月 / 近 7 天）
+  手机：两栏的 wrapper 用 display: contents 拆开，按 .o-* 的 order 排成一列
 #}
 <div class="day-layout">
-
-<aside class="col-left">
-  <section class="card o-stations">
-    <h2>今天各站</h2>
-    <ul class="mini-list">
-      {% for s2, d2 in station_rows %}
-      {% set sg2 = d2.suggestion if d2 else none %}
-      <li class="{% if s2.id == station.id %}current{% endif %}">
-        <a href="/tides/{{ s2.id }}?date={{ day.isoformat() }}">
-          <span class="mini-name">{{ s2.name }}</span>
-          {% if sg2 %}
-          <span class="stars">{{ sg2.stars|stars }}</span>
-          <span class="muted num mini-sub">{% if sg2.night %}夜 {% endif %}{{ sg2.window_start|hm }}–{{ sg2.window_end|hm }}</span>
-          {% else %}
-          <span class="muted mini-sub">查看潮汐</span>
-          {% endif %}
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-</aside>
 
 <div class="col-main">
   <section class="card head o-head">
@@ -59,8 +37,8 @@
   </section>
   {% else %}
 
-  <div class="pair">
-    {% set s = data.suggestion %}
+  {% set s = data.suggestion %}
+  <div class="pair{% if not s %} solo{% endif %}">
     {% if s %}
     <section class="card advice o-advice level-{{ s.stars }}{% if s.verdict == '不宜赶海' %} veto{% endif %}">
       <div class="advice-head">
@@ -83,31 +61,12 @@
     </section>
     {% endif %}
 
-    <section class="card o-tides">
-      <div class="badges">
-        <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
-        <span class="badge">{{ data.astro.moon_phase }}</span>
-      </div>
-      <table class="extremes">
-        <thead><tr><th>潮汐</th><th>时间</th><th>潮高</th></tr></thead>
-        <tbody>
-        {% for e in data.extremes %}
-          <tr class="{{ e.kind }}">
-            <td>{{ "高潮" if e.kind == "high" else "低潮" }}</td>
-            <td class="num">{{ e.time|hm }}</td>
-            <td class="num">{{ "%.2f"|format(e.height) }} m</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
+    <section class="card o-chart">
+      <h2>潮汐曲线</h2>
+      <div id="tide-chart" class="chart" role="img" aria-label="{{ station.name }} {{ day.isoformat() }} 潮汐曲线"></div>
+      <p class="muted small">绿色为最佳赶海时段，红线为最晚离开时间，灰色阴影为夜间。曲线由高低潮时刻按余弦插值得到。</p>
     </section>
   </div>
-
-  <section class="card o-chart">
-    <h2>潮汐曲线</h2>
-    <div id="tide-chart" class="chart" role="img" aria-label="{{ station.name }} {{ day.isoformat() }} 潮汐曲线"></div>
-    <p class="muted small">绿色为最佳赶海时段，红线为最晚离开时间，灰色阴影为夜间。曲线由高低潮时刻按余弦插值得到。</p>
-  </section>
 
   <section class="card o-hourly">
     <h2>逐时潮高</h2>
@@ -123,6 +82,24 @@
 
 <aside class="col-right">
   {% if data %}
+  <section class="card o-tides">
+    <div class="badges">
+      <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
+      <span class="badge">{{ data.astro.moon_phase }}</span>
+    </div>
+    <table class="extremes">
+      <thead><tr><th>潮汐</th><th>时间</th><th>潮高</th></tr></thead>
+      <tbody>
+      {% for e in data.extremes %}
+        <tr class="{{ e.kind }}">
+          <td>{{ "高潮" if e.kind == "high" else "低潮" }}</td>
+          <td class="num">{{ e.time|hm }}</td>
+          <td class="num">{{ "%.2f"|format(e.height) }} m</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
   <section class="card o-weather">
     <h2>天气风浪</h2>
     {% set w = data.weather %}

@@ -156,7 +156,6 @@ def create_app(service: TideService | None = None) -> FastAPI:
                 "data": data,
                 "payload": serialize(data) if data else None,
                 "error": error,
-                "station_rows": station_rows(now.date()),
                 "week": week(station, now.date()),
             },
             status_code=200 if data else 502,

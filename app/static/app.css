@@ -165,7 +165,7 @@ table.extremes { width: 100%; border-collapse: collapse; }
 
 /* ---------- 站点日页：手机单列，按 order 排序 ---------- */
 .day-layout { display: flex; flex-direction: column; }
-.col-left, .col-main, .col-right, .pair { display: contents; }
+.col-main, .col-right, .pair { display: contents; }
 .o-head { order: 1; }
 .o-advice { order: 2; }
 .o-tides { order: 3; }
@@ -174,7 +174,6 @@ table.extremes { width: 100%; border-collapse: collapse; }
 .o-astro { order: 6; }
 .o-hourly { order: 7; }
 .o-week { order: 8; }
-.o-stations { display: none; }
 
 /* 平板：主栏 + 右栏 */
 @media (min-width: 820px) {
@@ -184,13 +183,13 @@ table.extremes { width: 100%; border-collapse: collapse; }
   .hourly { grid-template-columns: repeat(8, 1fr); }
 }
 
-/* 桌面：左栏 + 主栏 + 右栏 */
+/* 桌面：赶海建议和潮汐曲线并排，曲线高度跟随建议卡片 */
 @media (min-width: 1180px) {
-  .day-layout { grid-template-columns: 240px minmax(0, 1fr) 300px; }
-  .col-left { display: block; position: sticky; top: 16px; }
-  .o-stations { display: block; }
-  .pair { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 12px; align-items: start; }
-  .chart { height: 360px; }
+  .pair { display: grid; grid-template-columns: minmax(340px, 1fr) minmax(0, 1.5fr); gap: 12px; margin-bottom: 12px; }
+  .pair.solo { grid-template-columns: minmax(0, 1fr); }
+  .pair > .card { margin-bottom: 0; }
+  .pair .o-chart { display: flex; flex-direction: column; }
+  .pair .o-chart .chart { flex: 1; height: auto; min-height: 320px; }
   .hourly { grid-template-columns: repeat(12, 1fr); }
 }
 
