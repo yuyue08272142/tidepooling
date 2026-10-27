@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ station.name }}潮汐表 {{ day.isoformat() }} - 北海赶海潮汐{% endblock %}
+{% block content %}
+<section class="card head">
+  <div class="head-row">
+    <h1>{{ station.name }}潮汐表</h1>
+    <select id="station-select" aria-label="切换潮汐站">
+      {% for s in stations %}
+      <option value="{{ s.id }}" {% if s.id == station.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <nav class="date-nav">
+    <a class="btn" href="?date={{ prev.isoformat() }}">‹ 前一天</a>
+    <input type="date" id="date-input" value="{{ day.isoformat() }}" aria-label="选择日期">
+    <a class="btn" href="?date={{ next.isoformat() }}">后一天 ›</a>
+  </nav>
+  <p class="muted center">
+    {{ day.isoformat() }} {{ day|weekday }}{% if is_today %} · 今天{% endif %}
+    {% if data %} · {{ data.astro.lunar.text }}{% if data.astro.lunar.jieqi %} · {{ data.astro.lunar.jieqi }}{% endif %}{% endif %}
+  </p>
+</section>
+
+{% if error %}
+<section class="card error">
+  <h2>暂时取不到潮汐数据</h2>
+  <p>{{ error }}</p>
+  <p><a class="btn" href="?date={{ day.isoformat() }}">重试</a></p>
+</section>
+{% else %}
+
+<section class="card">
+  <div class="badges">
+    <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
+    <span class="badge">{{ data.astro.moon_phase }}</span>
+  </div>
+  <table class="extremes">
+    <thead><tr><th>潮汐</th><th>时间</th><th>潮高</th></tr></thead>
+    <tbody>
+    {% for e in data.extremes %}
+      <tr class="{{ e.kind }}">
+        <td>{{ "高潮" if e.kind == "high" else "低潮" }}</td>
+        <td class="num">{{ e.time|hm }}</td>
+        <td class="num">{{ "%.2f"|format(e.height) }} m</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>潮汐曲线</h2>
+  <div id="tide-chart" class="chart" role="img" aria-label="{{ station.name }} {{ day.isoformat() }} 潮汐曲线"></div>
+  <p class="muted small">阴影为夜间；曲线由高低潮时刻按余弦插值得到。</p>
+</section>
+
+<section class="card">
+  <h2>日月时刻</h2>
+  <dl class="astro">
+    <div><dt>日出</dt><dd>{{ data.astro.sunrise|hm }}</dd></div>
+    <div><dt>日落</dt><dd>{{ data.astro.sunset|hm }}</dd></div>
+    <div><dt>天亮</dt><dd>{{ data.astro.dawn|hm }}</dd></div>
+    <div><dt>天黑</dt><dd>{{ data.astro.dusk|hm }}</dd></div>
+    <div><dt>月出</dt><dd>{{ data.astro.moonrise|hm }}</dd></div>
+    <div><dt>月落</dt><dd>{{ data.astro.moonset|hm }}</dd></div>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>逐时潮高</h2>
+  <div class="hourly">
+    {% for t, h in data.hourly[:24] %}
+    <div class="cell"><span class="muted">{{ t.hour }}时</span><span class="num">{{ "%.2f"|format(h) if h is not none else "--" }}</span></div>
+    {% endfor %}
+  </div>
+  <p class="muted small">单位：米，相对当地潮高基准面。数据来源：{{ data.source }}</p>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById("station-select").addEventListener("change", (e) => {
+    location.href = "/tides/" + e.target.value + "?date={{ day.isoformat() }}";
+  });
+  document.getElementById("date-input").addEventListener("change", (e) => {
+    if (e.target.value) location.search = "?date=" + e.target.value;
+  });
+</script>
+{% if payload %}
+<script id="tide-data" type="application/json">{{ payload|tojson }}</script>
+<script src="{{ url_for('static', path='vendor/echarts-5.5.1.min.js') }}"></script>
+<script src="{{ url_for('static', path='day.js') }}"></script>
+{% endif %}
+{% endblock %}

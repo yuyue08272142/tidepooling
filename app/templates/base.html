@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b6e99">
+  <title>{% block title %}北海赶海潮汐{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">🌊 北海赶海潮汐</a>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="foot">
+    潮汐数据为天文预报，仅供参考，不可用于航海。大风、风暴潮时实际潮位可能明显偏高，赶海请注意安全。
+  </footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

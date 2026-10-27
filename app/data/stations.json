@@ -1,0 +1,29 @@
+[
+  {
+    "id": "beihai",
+    "name": "北海",
+    "region": "广西北海市",
+    "lat": 21.48,
+    "lon": 109.10,
+    "tidescn_id": 945,
+    "note": "tidescn 编号取自用户提供的链接，待确认对应站点"
+  },
+  {
+    "id": "weizhou",
+    "name": "涠洲岛",
+    "region": "广西北海市",
+    "lat": 21.03,
+    "lon": 109.12,
+    "tidescn_id": null,
+    "note": "tidescn 编号待补充"
+  },
+  {
+    "id": "tieshangang",
+    "name": "铁山港",
+    "region": "广西北海市",
+    "lat": 21.55,
+    "lon": 109.56,
+    "tidescn_id": null,
+    "note": "tidescn 编号待补充"
+  }
+]

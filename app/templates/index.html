@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h1>选择潮汐站</h1>
+  <p class="muted">{{ today.isoformat() }} {{ today|weekday }} · 广西北海市</p>
+  <ul class="station-list">
+    {% for s in stations %}
+    <li>
+      <a href="/tides/{{ s.id }}?date={{ today.isoformat() }}">
+        <span class="name">{{ s.name }}</span>
+        <span class="muted">{{ s.region }}</span>
+        <span class="go">查看潮汐 ›</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,131 @@
+:root {
+  --bg: #f3f7f9;
+  --card: #ffffff;
+  --fg: #17252f;
+  --muted: #6b7c88;
+  --line: #e2e9ee;
+  --sea: #0b6e99;
+  --sea-soft: rgba(11, 110, 153, 0.12);
+  --night: rgba(23, 37, 47, 0.07);
+  --now: #d9480f;
+  --high: #0b6e99;
+  --low: #2f9e44;
+  --big: #c92a2a;
+  --mid: #e67700;
+  --small: #6b7c88;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e171d;
+    --card: #16232c;
+    --fg: #e3edf3;
+    --muted: #8fa3b1;
+    --line: #26353f;
+    --sea: #4fb3df;
+    --sea-soft: rgba(79, 179, 223, 0.16);
+    --night: rgba(0, 0, 0, 0.28);
+    --now: #ff8a4c;
+    --high: #4fb3df;
+    --low: #69db7c;
+    --big: #ff6b6b;
+    --mid: #ffa94d;
+    --small: #8fa3b1;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+a { color: var(--sea); text-decoration: none; }
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 16px; margin: 0 0 10px; }
+
+.topbar {
+  background: var(--sea);
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+.topbar .brand { color: #fff; font-weight: 600; }
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 12px 16px; }
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.muted { color: var(--muted); }
+.small { font-size: 12px; margin: 8px 0 0; }
+.center { text-align: center; margin: 8px 0 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+.head-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+select, input[type="date"] {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.date-nav { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.date-nav input { flex: 1; min-width: 0; text-align: center; }
+.btn {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--sea-soft);
+  white-space: nowrap;
+}
+
+.badges { display: flex; gap: 6px; margin-bottom: 10px; }
+.badge {
+  font-size: 13px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.badge.period-大潮 { color: var(--big); border-color: var(--big); }
+.badge.period-中潮 { color: var(--mid); border-color: var(--mid); }
+.badge.period-小潮 { color: var(--small); }
+
+table.extremes { width: 100%; border-collapse: collapse; }
+.extremes th, .extremes td { padding: 8px 4px; text-align: left; border-bottom: 1px solid var(--line); }
+.extremes th { font-weight: 500; color: var(--muted); font-size: 13px; }
+.extremes tr:last-child td { border-bottom: 0; }
+.extremes tr.high td:first-child { color: var(--high); font-weight: 600; }
+.extremes tr.low td:first-child { color: var(--low); font-weight: 600; }
+
+.chart { width: 100%; height: 260px; }
+
+.astro { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0; }
+.astro div { background: var(--bg); border-radius: 8px; padding: 8px; text-align: center; }
+.astro dt { color: var(--muted); font-size: 12px; }
+.astro dd { margin: 0; font-size: 16px; font-variant-numeric: tabular-nums; }
+
+.hourly { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.hourly .cell {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--bg); border-radius: 6px; padding: 4px 0; font-size: 13px;
+}
+@media (max-width: 360px) { .hourly { grid-template-columns: repeat(4, 1fr); } }
+
+.station-list { list-style: none; margin: 12px 0 0; padding: 0; }
+.station-list li a {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 12px 4px; border-bottom: 1px solid var(--line); color: var(--fg);
+}
+.station-list li:last-child a { border-bottom: 0; }
+.station-list .name { font-size: 17px; font-weight: 600; }
+.station-list .go { margin-left: auto; color: var(--sea); }
+
+.error h2 { color: var(--now); }
+
+.foot { max-width: 720px; margin: 0 auto; padding: 8px 16px 24px; font-size: 12px; color: var(--muted); }
