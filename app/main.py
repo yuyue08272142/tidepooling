@@ -108,12 +108,27 @@ def create_app(service: TideService | None = None) -> FastAPI:
     def calendar(request: Request, station_id: str):
         station = lookup(station_id)
         today = datetime.now(config.TZ).date()
-        days = [today + timedelta(days=i) for i in range(available_days() + 1)]
-        rows = [(d, cached_day(station, d)) for d in days]
+        last = today + timedelta(days=available_days())
+        # 按周排成日历：从今天所在周的周一排到最后一天所在周的周日，范围外的格子留空
+        start = today - timedelta(days=today.weekday())
+        end = last + timedelta(days=6 - last.weekday())
+        cells = []
+        d = start
+        while d <= end:
+            in_range = today <= d <= last
+            cells.append((d, in_range, cached_day(station, d) if in_range else None))
+            d += timedelta(days=1)
+        weeks = [cells[i : i + 7] for i in range(0, len(cells), 7)]
         return templates.TemplateResponse(
             request,
             "calendar.html",
-            {"station": station, "stations": all_stations(), "rows": rows, "today": today},
+            {
+                "station": station,
+                "stations": all_stations(),
+                "weeks": weeks,
+                "today": today,
+                "last": last,
+            },
         )
 
     @app.get("/tides/{station_id}", response_class=HTMLResponse)

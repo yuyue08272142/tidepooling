@@ -55,10 +55,25 @@ def test_cache_avoids_refetch(client, provider):
 def test_calendar_reads_cache_only(client, provider, service):
     r = client.get("/calendar/beihai")
     assert r.status_code == 200 and provider.calls == 0
-    assert r.text.count("数据未缓存") == 15
+    assert r.text.count("未缓存</span>") == 15
     prefetch(service, days=14)
     r = client.get("/calendar/beihai")
-    assert "数据未缓存" not in r.text and r.text.count("★★★★★") == 15
+    assert "未缓存</span>" not in r.text and r.text.count("★★★★★") == 15
+
+
+def test_calendar_is_aligned_by_weekday(client):
+    import re
+
+    r = client.get("/calendar/beihai")
+    assert re.findall(r'role="columnheader">(周.)<', r.text) == ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+    cells = re.findall(r'class="cal-cell[^"]*"', r.text)
+    assert len(cells) % 7 == 0  # 每行 7 格，补齐整周
+    today = datetime.now(TZ).date()
+    # 今天之前的空格数 = 今天是周几（周一为 0）；15 个可点的日期格
+    first_real = next(i for i, c in enumerate(cells) if "empty" not in c)
+    assert first_real == today.weekday()
+    assert sum("empty" not in c for c in cells) == 15
+    assert 'class="cal-cell today"' in r.text or "cal-cell today" in r.text
 
 
 def test_unknown_station_404(client):

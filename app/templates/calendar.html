@@ -10,38 +10,48 @@
       {% endfor %}
     </select>
   </div>
-  <p class="muted">未来 {{ rows|length }} 天，按赶海指数排出每天最适合的一次低潮。</p>
+  <p class="muted small">
+    {{ today.strftime("%m-%d") }} 至 {{ last.strftime("%m-%d") }}。颜色越深越适合赶海，时间为最佳时段，
+    “夜”表示低潮在夜间。点日期查看详情。
+  </p>
 </section>
 
 <section class="card">
-  <ul class="cal">
-    {% for d, data in rows %}
-    {% set sg = data.suggestion if data else none %}
-    <li class="{% if sg %}level-{{ sg.stars }}{% if sg.verdict == '不宜赶海' %} veto{% endif %}{% endif %}">
-      <a href="/tides/{{ station.id }}?date={{ d.isoformat() }}">
-        <div class="cal-date">
-          <span class="num">{{ d.strftime("%m-%d") }}</span>
-          <span class="muted">{% if d == today %}今天{% else %}{{ d|weekday }}{% endif %}</span>
-        </div>
-        {% if sg %}
-        <div class="cal-main">
-          <span class="stars">{{ sg.stars|stars }}</span>
-          <span class="muted">{{ sg.verdict }}</span>
-          <span class="num cal-window">{% if sg.night %}夜 {% endif %}{{ sg.window_start|hm }}–{{ sg.window_end|hm }} · 低潮 {{ "%.1f"|format(sg.low.height) }}m</span>
-        </div>
-        <div class="cal-side">
-          <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
-          {% if data.weather %}<span class="muted">{{ data.weather.sky }} {{ data.weather.wind_level }}级</span>{% endif %}
-        </div>
-        {% elif data %}
-        <div class="cal-main muted">当天没有低潮</div>
-        {% else %}
-        <div class="cal-main muted">数据未缓存，点开查看</div>
-        {% endif %}
-      </a>
-    </li>
+  <div class="cal-grid" role="grid" aria-label="{{ station.name }}赶海日历">
+    {% for wd in ["一", "二", "三", "四", "五", "六", "日"] %}
+    <div class="cal-wd{% if loop.index > 5 %} weekend{% endif %}" role="columnheader">周{{ wd }}</div>
     {% endfor %}
-  </ul>
+
+    {% for week in weeks %}
+    {% for d, in_range, data in week %}
+    {% set sg = data.suggestion if data else none %}
+    {% set month = d.day == 1 or d == today %}
+    {% if not in_range %}
+    <div class="cal-cell empty" role="gridcell">
+      <span class="cal-day">{% if d.day == 1 %}<span class="cal-month">{{ d.month }}月</span>{% endif %}{{ d.day }}</span>
+    </div>
+    {% else %}
+    <a class="cal-cell{% if sg %} level-{{ sg.stars }}{% if sg.verdict == '不宜赶海' %} veto{% endif %}{% endif %}{% if d == today %} today{% endif %}"
+       role="gridcell" href="/tides/{{ station.id }}?date={{ d.isoformat() }}"
+       aria-label="{{ d.month }}月{{ d.day }}日{% if sg %} {{ sg.stars }}星 {{ sg.window_start|hm }}到{{ sg.window_end|hm }}{% endif %}">
+      <span class="cal-day">
+        {% if month %}<span class="cal-month">{{ d.month }}月</span>{% endif %}{{ d.day }}
+        {% if sg and sg.night %}<span class="cal-night">夜</span>{% endif %}
+      </span>
+      {% if sg %}
+      <span class="stars">{{ sg.stars|stars }}</span>
+      <span class="cal-time num"><span>{{ sg.window_start|hm }}</span><span class="sep">–</span><span>{{ sg.window_end|hm }}</span></span>
+      <span class="badge period-{{ data.astro.tide_period }}">{{ data.astro.tide_period }}</span>
+      {% elif data %}
+      <span class="muted cal-note">无低潮</span>
+      {% else %}
+      <span class="muted cal-note">未缓存</span>
+      {% endif %}
+    </a>
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}
 

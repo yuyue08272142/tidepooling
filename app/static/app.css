@@ -162,20 +162,6 @@ table.extremes { width: 100%; border-collapse: collapse; }
 .small-stars { font-size: 13px; }
 .station-list .go.num { font-size: 14px; }
 
-.cal { list-style: none; margin: 0; padding: 0; }
-.cal li { border-bottom: 1px solid var(--line); border-left: 4px solid transparent; }
-.cal li:last-child { border-bottom: 0; }
-.cal li.level-5, .cal li.level-4 { border-left-color: var(--low); }
-.cal li.level-3 { border-left-color: var(--mid); }
-.cal li.veto { border-left-color: var(--big); }
-.cal a { display: flex; align-items: center; gap: 10px; padding: 10px 8px; color: var(--fg); }
-.cal-date { display: flex; flex-direction: column; width: 52px; flex: none; font-size: 13px; white-space: nowrap; }
-.cal-date .num { font-size: 15px; font-weight: 600; }
-.cal-main { flex: 1; display: flex; flex-direction: column; min-width: 0; font-size: 13px; }
-.cal-main .stars { font-size: 15px; }
-.cal-window { color: var(--fg); }
-.cal-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 12px; }
-.cal-side .badge { font-size: 12px; padding: 0 8px; }
 
 /* ---------- 站点日页：手机单列，按 order 排序 ---------- */
 .day-layout { display: flex; flex-direction: column; }
@@ -263,9 +249,49 @@ table.extremes { width: 100%; border-collapse: collapse; }
 .matrix td.heat-3 { background: rgba(240, 140, 0, 0.16); }
 .matrix td.veto { background: rgba(201, 42, 42, 0.16); }
 
-/* ---------- 赶海日历：宽屏改成卡片网格 ---------- */
-@media (min-width: 820px) {
-  .cal { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
-  .cal li { border: 1px solid var(--line); border-left-width: 4px; border-radius: 10px; }
-  .cal li:last-child { border-bottom: 1px solid var(--line); }
+/* ---------- 赶海日历：周一到周日 7 列 ---------- */
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.cal-wd { text-align: center; font-size: 13px; color: var(--muted); padding: 2px 0 4px; }
+.cal-wd.weekend { color: var(--sea); font-weight: 600; }
+.cal-cell {
+  display: flex; flex-direction: column; gap: 4px; min-width: 0; min-height: 118px;
+  padding: 8px 10px; border-radius: 10px; border: 2px solid transparent;
+  background: var(--bg); color: var(--fg);
+}
+a.cal-cell:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }
+.cal-cell.empty { background: transparent; border: 1px dashed var(--line); }
+.cal-cell.empty .cal-day { color: var(--muted); font-weight: 400; }
+.cal-cell.level-5 { background: rgba(47, 158, 68, 0.28); }
+.cal-cell.level-4 { background: rgba(47, 158, 68, 0.15); }
+.cal-cell.level-3 { background: rgba(240, 140, 0, 0.14); }
+.cal-cell.veto { background: rgba(201, 42, 42, 0.14); }
+.cal-cell.today { border-color: var(--sea); }
+.cal-day { font-size: 18px; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+.cal-month { font-size: 12px; font-weight: 500; color: var(--muted); margin-right: 2px; }
+.cal-night {
+  font-size: 11px; font-weight: 500; color: var(--card); background: var(--muted);
+  border-radius: 4px; padding: 0 3px; vertical-align: 2px;
+}
+.cal-cell .stars { font-size: 14px; letter-spacing: 0; white-space: nowrap; }
+.cal-time { font-size: 13px; white-space: nowrap; }
+.cal-cell .badge { align-self: flex-start; margin-top: auto; font-size: 12px; padding: 0 8px; }
+.cal-note { font-size: 12px; }
+
+/* 中等宽度：时间拆两行 */
+@media (max-width: 1000px) {
+  .cal-time .sep { display: none; }
+  .cal-time span { display: block; }
+}
+/* 手机：格子窄，字号缩小、内容居中 */
+@media (max-width: 640px) {
+  .cal-grid { gap: 3px; }
+  .cal-wd { font-size: 12px; }
+  .cal-cell { min-height: 100px; padding: 5px 1px; gap: 2px; align-items: center; text-align: center; border-radius: 6px; }
+  .cal-day { font-size: 14px; }
+  .cal-month { display: block; font-size: 10px; margin: 0; }
+  .cal-night { font-size: 9px; padding: 0 2px; }
+  .cal-cell .stars { font-size: 8px; letter-spacing: -0.5px; }
+  .cal-time { font-size: 11px; line-height: 1.25; }
+  .cal-cell .badge { align-self: center; font-size: 10px; padding: 0 3px; }
+  .cal-note { font-size: 10px; }
 }
