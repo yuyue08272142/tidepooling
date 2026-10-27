@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='vendor/leaflet-1.9.4.css') }}">
+{% endblock %}
 {% block content %}
 <section class="card intro">
   <h1>今天去哪赶海</h1>
@@ -30,6 +33,20 @@
   </a>
   {% endfor %}
 </div>
+
+<section class="card map-card">
+  <div class="map-head">
+    <h2>赶海地点地图</h2>
+    <ul class="map-legend" aria-label="图例">
+      <li><i class="dot good"></i>4~5 星</li>
+      <li><i class="dot ok"></i>3 星</li>
+      <li><i class="dot poor"></i>1~2 星</li>
+      <li><i class="dot veto"></i>不宜赶海</li>
+    </ul>
+  </div>
+  <div id="station-map" class="map" role="region" aria-label="北海市赶海地点地图"></div>
+  <p class="muted small">标记颜色为今天的赶海指数，点标记查看最佳时段和详情。站点位置为大致位置。</p>
+</section>
 
 <section class="card">
   <h2>未来 7 天各站赶海指数</h2>
@@ -66,4 +83,10 @@
   </div>
   <p class="muted small">格子里是赶海指数（满分 100）和最佳时段的开始时间，颜色越深越适合。点格子看当天详情。</p>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script id="map-data" type="application/json">{{ map_data|tojson }}</script>
+<script src="{{ url_for('static', path='vendor/leaflet-1.9.4.js') }}"></script>
+<script src="{{ url_for('static', path='map.js') }}"></script>
 {% endblock %}

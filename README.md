@@ -4,7 +4,7 @@
 
 ## 功能
 
-- **首页** `/`：今天各站的赶海星级和最佳时段
+- **首页** `/`：今天各站的赶海星级和最佳时段、赶海地点地图（标记颜色按今天的星级，点开看时段和详情）、未来 7 天各站赶海指数总览
 - **站点日页** `/tides/{站点}?date=YYYY-MM-DD`：
   - 赶海建议：星级/分数、最佳时段、开始返回时间、最晚离开滩涂时间、理由和安全提醒
   - 农历、潮汛（大/中/小潮）、月相、高低潮表
@@ -78,6 +78,11 @@ pytest -q
 | `CACHE_PATH` | `var/cache.sqlite3` |
 | `CACHE_TTL_DAYS` | `30` |
 | `WEATHER_TTL_HOURS` | `6` |
+| `MAP_TILES` | `osm`（OpenStreetMap，免 key）；设为 `tianditu` 改用天地图 |
+| `TIANDITU_KEY` | 天地图 key（在天地图官网免费申请“浏览器端”key）；`MAP_TILES=tianditu` 但没配 key 时仍用 OpenStreetMap |
+
+地图坐标都用 WGS-84（GPS 坐标），OpenStreetMap 和天地图都能直接用，不需要偏移换算。
+站点经纬度是大致位置，可在 `app/data/stations.json` 里修正；`map_label` 控制地图上站名标签的方向。
 
 ## 目录
 
@@ -92,6 +97,6 @@ app/
   astro.py           日月、农历、潮汛
   cache.py           SQLite 缓存
   data/stations.json 站点配置
-  templates/ static/ 页面（ECharts 5.5.1 放在 static/vendor，Apache-2.0）
+  templates/ static/ 页面（static/vendor 内：ECharts 5.5.1 Apache-2.0、Leaflet 1.9.4 BSD-2-Clause）
 tests/
 ```

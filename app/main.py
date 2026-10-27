@@ -62,6 +62,56 @@ def serialize(d: DayTides) -> dict:
     }
 
 
+_TIANDITU = (
+    "https://t{s}.tianditu.gov.cn/{layer}_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0"
+    "&LAYER={layer}&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles"
+    "&TILEMATRIX={{z}}&TILEROW={{y}}&TILECOL={{x}}&tk={key}"
+)
+
+
+def map_tiles() -> list[dict]:
+    """首页地图的底图图层。天地图需要 key，没配 key 时退回 OpenStreetMap。"""
+    if config.MAP_TILES == "tianditu" and config.TIANDITU_KEY:
+        return [
+            {
+                "url": _TIANDITU.format(s="{s}", layer=layer, key=config.TIANDITU_KEY),
+                "subdomains": "01234567",
+                "attribution": "&copy; 天地图" if layer == "vec" else "",
+                "maxZoom": 18,
+            }
+            for layer in ("vec", "cva")  # 矢量底图 + 中文注记
+        ]
+    return [
+        {
+            "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "subdomains": "",
+            "attribution": '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 贡献者',
+            "maxZoom": 19,
+        }
+    ]
+
+
+def map_points(rows, day: date) -> list[dict]:
+    """首页地图上的站点标记：位置 + 当天赶海建议（没缓存时只有位置）。"""
+    points = []
+    for s, d in rows:
+        sg = d.suggestion if d else None
+        points.append(
+            {
+                "id": s.id,
+                "name": s.name,
+                "lat": s.lat,
+                "lon": s.lon,
+                "label": s.map_label,
+                "url": f"/tides/{s.id}?date={day.isoformat()}",
+                "calendar": f"/calendar/{s.id}",
+                "period": d.astro["tide_period"] if d else None,
+                "suggestion": serialize_suggestion(sg),
+            }
+        )
+    return points
+
+
 def create_app(service: TideService | None = None) -> FastAPI:
     app = FastAPI(title="北海赶海潮汐")
     app.state.service = service or TideService(
@@ -98,10 +148,17 @@ def create_app(service: TideService | None = None) -> FastAPI:
         today = datetime.now(config.TZ).date()
         days = [today + timedelta(days=i) for i in range(7)]
         matrix = [(s, [d for _, d in week(s, today)]) for s in all_stations()]
+        rows = station_rows(today)
         return templates.TemplateResponse(
             request,
             "index.html",
-            {"rows": station_rows(today), "today": today, "days": days, "matrix": matrix},
+            {
+                "rows": rows,
+                "today": today,
+                "days": days,
+                "matrix": matrix,
+                "map_data": {"tiles": map_tiles(), "points": map_points(rows, today)},
+            },
         )
 
     @app.get("/calendar/{station_id}", response_class=HTMLResponse)

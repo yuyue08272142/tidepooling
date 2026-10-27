@@ -1,7 +1,7 @@
 [
-  {"id": "beihai", "name": "北海港", "region": "广西北海市", "lat": 21.48, "lon": 109.08, "tidescn_id": 945},
-  {"id": "jinhaiwan", "name": "金海湾", "region": "广西北海市", "lat": 21.42, "lon": 109.22, "tidescn_id": 1374},
+  {"id": "beihai", "name": "北海港", "region": "广西北海市", "lat": 21.48, "lon": 109.08, "tidescn_id": 945, "map_label": "left"},
+  {"id": "jinhaiwan", "name": "金海湾", "region": "广西北海市", "lat": 21.42, "lon": 109.22, "tidescn_id": 1374, "map_label": "bottom"},
   {"id": "weizhou", "name": "涠洲岛", "region": "广西北海市", "lat": 21.03, "lon": 109.12, "tidescn_id": 950},
   {"id": "yingpan", "name": "营盘港", "region": "广西北海市", "lat": 21.45, "lon": 109.40, "tidescn_id": 1168},
-  {"id": "tieshangang", "name": "铁山港", "region": "广西北海市", "lat": 21.55, "lon": 109.56, "tidescn_id": 949}
+  {"id": "tieshangang", "name": "铁山港", "region": "广西北海市", "lat": 21.55, "lon": 109.56, "tidescn_id": 949, "map_label": "top"}
 ]

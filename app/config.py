@@ -16,3 +16,6 @@ CACHE_PATH = Path(os.environ.get("CACHE_PATH", ROOT / "var" / "cache.sqlite3"))
 CACHE_TTL_DAYS = float(os.environ.get("CACHE_TTL_DAYS", "30"))
 # 天气预报会更新：缓存超过这个小时数，预取时就重新抓
 WEATHER_TTL_HOURS = float(os.environ.get("WEATHER_TTL_HOURS", "6"))
+# 首页地图底图："osm"（OpenStreetMap，免 key）或 "tianditu"（天地图，需 TIANDITU_KEY，国内访问更稳）
+MAP_TILES = os.environ.get("MAP_TILES", "osm")
+TIANDITU_KEY = os.environ.get("TIANDITU_KEY", "")

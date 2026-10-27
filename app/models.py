@@ -16,6 +16,7 @@ class Station:
     lon: float
     tidescn_id: int | None = None
     note: str = ""
+    map_label: str = "right"  # 首页地图上站名标签的方向：right / left / top / bottom
 
 
 @dataclass(frozen=True)

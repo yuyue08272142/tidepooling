@@ -130,3 +130,38 @@ def test_index_seven_day_matrix(client, service):
     r = client.get("/")
     assert "未来 7 天各站赶海指数" in r.text
     assert r.text.count('class="heat-5') == 5 * 7  # stub 数据每天都是 5 星
+
+
+def _map_data(html):
+    start = html.index('<script id="map-data" type="application/json">') + len('<script id="map-data" type="application/json">')
+    return json.loads(html[start:html.index("</script>", start)])
+
+
+def test_index_map_marks_five_stations(client, service):
+    prefetch(service, days=0)
+    r = client.get("/")
+    assert 'id="station-map"' in r.text and "leaflet-1.9.4.js" in r.text
+    data = _map_data(r.text)
+    assert [p["name"] for p in data["points"]] == ["北海港", "金海湾", "涠洲岛", "营盘港", "铁山港"]
+    for p in data["points"]:
+        assert 20.5 < p["lat"] < 22 and 108.5 < p["lon"] < 110  # 北海市范围
+        assert p["suggestion"]["stars"] == 5 and p["url"].startswith(f"/tides/{p['id']}?date=")
+    assert "openstreetmap" in data["tiles"][0]["url"]
+
+
+def test_index_map_without_cache_still_shows_positions(client):
+    data = _map_data(client.get("/").text)
+    assert len(data["points"]) == 5 and all(p["suggestion"] is None for p in data["points"])
+
+
+def test_map_tiles_tianditu_needs_key(monkeypatch):
+    from app import config
+    from app.main import map_tiles
+
+    monkeypatch.setattr(config, "MAP_TILES", "tianditu")
+    monkeypatch.setattr(config, "TIANDITU_KEY", "")
+    assert "openstreetmap" in map_tiles()[0]["url"]  # 没 key 退回 OSM
+    monkeypatch.setattr(config, "TIANDITU_KEY", "abc123")
+    urls = [t["url"] for t in map_tiles()]
+    assert len(urls) == 2 and all("tianditu.gov.cn" in u and "tk=abc123" in u for u in urls)
+    assert "LAYER=vec" in urls[0] and "LAYER=cva" in urls[1] and "{z}" in urls[0] and "{s}" in urls[0]
