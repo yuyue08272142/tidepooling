@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from app.providers import ProviderError
-from app.providers.tidescn import TidescnProvider, decode_html, parse_extremes
+from app.models import DayWeather
+from app.providers.tidescn import TidescnProvider, decode_html, parse_extremes, parse_page
 from app.stations import get_station
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -51,9 +52,22 @@ def test_out_of_range_day_is_not_requested():
 
     p = TidescnProvider(client=NoNetwork())
     with pytest.raises(ProviderError, match="14 天"):
-        p.fetch_extremes(get_station("beihai"), date(2000, 1, 1))
+        p.fetch_day(get_station("beihai"), date(2000, 1, 1))
 
 
 def test_decodes_gbk():
     raw = '<meta charset="gbk"><p>干潮</p>'.encode("gbk")
     assert "干潮" in decode_html(raw)
+
+
+def test_parses_weather():
+    w = parse_page(read("tidescn_945_2026-10-24.html"), date(2026, 10, 24)).weather
+    assert w == DayWeather(sky="晴", air_temp=28.33, water_temp=29.75, pressure=1009.0,
+                           wind_level=2, wind_kmh=10.4, wind_dir="西北风", wave_m=0.21)
+
+
+def test_missing_weather_does_not_break_tides():
+    html = read("tidescn_945_2026-10-24.html")
+    start = html.index('<div class="column column3">')
+    page = parse_page(html[:start] + "</div></div>", date(2026, 10, 24))
+    assert page.weather is None and len(page.extremes) == 4

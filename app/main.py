@@ -9,8 +9,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from . import config
-from .cache import ExtremesCache
-from .models import DayTides
+from .cache import PageCache
+from .models import DayTides, Suggestion
 from .providers import ProviderError
 from .providers.tidescn import TidescnProvider
 from .stations import all_stations, get_station
@@ -21,10 +21,28 @@ templates = Jinja2Templates(directory=_HERE / "templates")
 templates.env.filters["hm"] = lambda t: t.strftime("%H:%M") if t else "--"
 _WEEKDAYS = "一二三四五六日"
 templates.env.filters["weekday"] = lambda d: "周" + _WEEKDAYS[d.weekday()]
+templates.env.filters["stars"] = lambda n: "★" * n + "☆" * (5 - n)
 
 
 def _iso(v):
     return v.isoformat() if isinstance(v, (date, datetime)) else v
+
+
+def serialize_suggestion(s: Suggestion | None) -> dict | None:
+    if s is None:
+        return None
+    return {
+        "score": s.score,
+        "stars": s.stars,
+        "verdict": s.verdict,
+        "low": s.low.to_dict(),
+        "window_start": s.window_start.isoformat(),
+        "window_end": s.window_end.isoformat(),
+        "leave_by": s.leave_by.isoformat(),
+        "night": s.night,
+        "reasons": s.reasons,
+        "warnings": s.warnings,
+    }
 
 
 def serialize(d: DayTides) -> dict:
@@ -38,13 +56,16 @@ def serialize(d: DayTides) -> dict:
         "hourly": [{"time": t.isoformat(), "height": h} for t, h in d.hourly],
         "curve": [[t.isoformat(), h] for t, h in d.curve],
         "astro": {k: _iso(v) for k, v in d.astro.items()},
+        "weather": d.weather.to_dict() if d.weather else None,
+        "weather_time": _iso(d.weather_time),
+        "suggestion": serialize_suggestion(d.suggestion),
     }
 
 
 def create_app(service: TideService | None = None) -> FastAPI:
     app = FastAPI(title="北海赶海潮汐")
     app.state.service = service or TideService(
-        TidescnProvider(), ExtremesCache(config.CACHE_PATH, config.CACHE_TTL_DAYS)
+        TidescnProvider(), PageCache(config.CACHE_PATH, config.CACHE_TTL_DAYS)
     )
     app.mount("/static", StaticFiles(directory=_HERE / "static"), name="static")
 
@@ -54,10 +75,32 @@ def create_app(service: TideService | None = None) -> FastAPI:
             raise HTTPException(404, "未找到该潮汐站")
         return station
 
+    def available_days() -> int:
+        return getattr(app.state.service.provider, "available_days", 14)
+
+    def cached_day(station, day) -> DayTides | None:
+        # 首页和日历只读缓存（由 app.prefetch 预先填好），避免一次打开触发几十次抓取
+        try:
+            return app.state.service.day(station, day, fetch=False)
+        except ProviderError:
+            return None
+
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request):
+        today = datetime.now(config.TZ).date()
+        rows = [(s, cached_day(s, today)) for s in all_stations()]
+        return templates.TemplateResponse(request, "index.html", {"rows": rows, "today": today})
+
+    @app.get("/calendar/{station_id}", response_class=HTMLResponse)
+    def calendar(request: Request, station_id: str):
+        station = lookup(station_id)
+        today = datetime.now(config.TZ).date()
+        days = [today + timedelta(days=i) for i in range(available_days() + 1)]
+        rows = [(d, cached_day(station, d)) for d in days]
         return templates.TemplateResponse(
-            request, "index.html", {"stations": all_stations(), "today": datetime.now(config.TZ).date()}
+            request,
+            "calendar.html",
+            {"station": station, "stations": all_stations(), "rows": rows, "today": today},
         )
 
     @app.get("/tides/{station_id}", response_class=HTMLResponse)
@@ -81,7 +124,7 @@ def create_app(service: TideService | None = None) -> FastAPI:
                 "next": day + timedelta(days=1),
                 "is_today": day == now.date(),
                 "min_date": now.date(),
-                "max_date": now.date() + timedelta(days=getattr(app.state.service.provider, "available_days", 14)),
+                "max_date": now.date() + timedelta(days=available_days()),
                 "data": data,
                 "payload": serialize(data) if data else None,
                 "error": error,

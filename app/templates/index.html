@@ -1,18 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="card">
-  <h1>选择潮汐站</h1>
+  <h1>今天去哪赶海</h1>
   <p class="muted">{{ today.isoformat() }} {{ today|weekday }} · 广西北海市</p>
   <ul class="station-list">
-    {% for s in stations %}
+    {% for s, d in rows %}
+    {% set sg = d.suggestion if d else none %}
     <li>
       <a href="/tides/{{ s.id }}?date={{ today.isoformat() }}">
         <span class="name">{{ s.name }}</span>
-        <span class="muted">{{ s.region }}</span>
+        {% if sg %}
+        <span class="stars small-stars level-{{ sg.stars }}" aria-label="{{ sg.stars }} 星">{{ sg.stars|stars }}</span>
+        <span class="go num">{% if sg.night %}夜 {% endif %}{{ sg.window_start|hm }}–{{ sg.window_end|hm }} ›</span>
+        {% else %}
         <span class="go">查看潮汐 ›</span>
+        {% endif %}
       </a>
     </li>
     {% endfor %}
   </ul>
+  <p class="muted small">星级为当天最适合的一次低潮的赶海指数，时间为最佳时段。点站点名查看详情和赶海日历。</p>
 </section>
 {% endblock %}

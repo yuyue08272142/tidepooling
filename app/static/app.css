@@ -13,6 +13,9 @@
   --big: #c92a2a;
   --mid: #e67700;
   --small: #6b7c88;
+  --window: rgba(47, 158, 68, 0.16);
+  --star: #f08c00;
+  --warn-bg: #fff4e6;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -30,6 +33,9 @@
     --big: #ff6b6b;
     --mid: #ffa94d;
     --small: #8fa3b1;
+    --window: rgba(105, 219, 124, 0.18);
+    --star: #ffc078;
+    --warn-bg: #2b2116;
   }
 }
 
@@ -129,3 +135,40 @@ table.extremes { width: 100%; border-collapse: collapse; }
 .error h2 { color: var(--now); }
 
 .foot { max-width: 720px; margin: 0 auto; padding: 8px 16px 24px; font-size: 12px; color: var(--muted); }
+
+.advice { border-left: 4px solid var(--line); }
+.advice.level-5, .advice.level-4 { border-left-color: var(--low); }
+.advice.level-3 { border-left-color: var(--mid); }
+.advice.veto { border-left-color: var(--big); }
+.advice-head { display: flex; align-items: baseline; gap: 10px; }
+.stars { color: var(--star); letter-spacing: 1px; }
+.advice-head .stars { font-size: 20px; }
+.advice-head .verdict { font-size: 17px; font-weight: 600; }
+.advice.veto .verdict { color: var(--big); }
+.advice-head .score { margin-left: auto; color: var(--muted); font-size: 13px; }
+.window { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 8px; }
+.window div { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+.window dt { color: var(--muted); font-size: 12px; }
+.window dd { margin: 0; font-size: 17px; font-weight: 600; }
+.window .must dd { color: var(--big); }
+.reasons, .warnings { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+.warnings { list-style: none; padding: 8px 10px; background: var(--warn-bg); border-radius: 8px; }
+.warnings li + li { margin-top: 4px; }
+
+.small-stars { font-size: 13px; }
+.station-list .go.num { font-size: 14px; }
+
+.cal { list-style: none; margin: 0; padding: 0; }
+.cal li { border-bottom: 1px solid var(--line); border-left: 4px solid transparent; }
+.cal li:last-child { border-bottom: 0; }
+.cal li.level-5, .cal li.level-4 { border-left-color: var(--low); }
+.cal li.level-3 { border-left-color: var(--mid); }
+.cal li.veto { border-left-color: var(--big); }
+.cal a { display: flex; align-items: center; gap: 10px; padding: 10px 8px; color: var(--fg); }
+.cal-date { display: flex; flex-direction: column; width: 52px; flex: none; font-size: 13px; white-space: nowrap; }
+.cal-date .num { font-size: 15px; font-weight: 600; }
+.cal-main { flex: 1; display: flex; flex-direction: column; min-width: 0; font-size: 13px; }
+.cal-main .stars { font-size: 15px; }
+.cal-window { color: var(--fg); }
+.cal-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 12px; }
+.cal-side .badge { font-size: 12px; padding: 0 8px; }

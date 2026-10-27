@@ -14,3 +14,5 @@ USER_AGENT = os.environ.get("USER_AGENT", "tidepooling/0.1 (personal tide viewer
 CACHE_PATH = Path(os.environ.get("CACHE_PATH", ROOT / "var" / "cache.sqlite3"))
 # 潮汐预报是天文推算结果，基本不变，缓存可以放久一些
 CACHE_TTL_DAYS = float(os.environ.get("CACHE_TTL_DAYS", "30"))
+# 天气预报会更新：缓存超过这个小时数，预取时就重新抓
+WEATHER_TTL_HOURS = float(os.environ.get("WEATHER_TTL_HOURS", "6"))

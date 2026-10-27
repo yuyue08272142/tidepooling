@@ -3,6 +3,8 @@
 页面结构（2026-10 核对）：
 - 日期在 `.tide_tile h1 span`，如“2026年10月24日 星期六”
 - 每条高低潮一个 `div.tide2`，文字如“05:23 满潮 2.6米”
+- 天气在 `.column3`（`.skycon` 天况，“气温28.33°C”“水温29.75°C”“气压1009hpa”），
+  风浪在 `.column6`（`.wind2`“2级”，`.wind1`“10.4km/h”，`.wind3`“西北风”“0.21米浪”）
 - 曲线的逐时数据是加密的，不使用；曲线由高低潮插值得到
 
 注意：只提供今天起 14 天内的数据。超出范围的日期不会报错，而是返回别的日期的页面，
@@ -23,7 +25,7 @@ import httpx
 from bs4 import BeautifulSoup
 
 from .. import config
-from ..models import Station, TideExtreme
+from ..models import DayPage, DayWeather, Station, TideExtreme
 from . import ProviderError
 
 AVAILABLE_DAYS = 14  # 页面日期选择器到 +15 天，但第 15 天页面没有数据（2026-10 核对）
@@ -47,9 +49,7 @@ def decode_html(content: bytes, content_type: str = "") -> str:
         return content.decode("gb18030", errors="replace")
 
 
-def parse_extremes(html: str, day: date) -> list[TideExtreme]:
-    soup = BeautifulSoup(html, "html.parser")
-
+def _extremes(soup: BeautifulSoup, day: date) -> list[TideExtreme]:
     title = soup.select_one(".tide_tile h1")
     m = _PAGE_DATE.search(title.get_text() if title else "")
     if not m:
@@ -73,6 +73,47 @@ def parse_extremes(html: str, day: date) -> list[TideExtreme]:
     if not extremes:
         raise ProviderError("tidescn 页面上没有高低潮数据")
     return extremes
+
+
+def _number(pattern: str, text: str) -> float | None:
+    m = re.search(pattern, text)
+    return float(m.group(1)) if m else None
+
+
+def _weather(soup: BeautifulSoup) -> DayWeather | None:
+    """天气是附加信息：页面结构变了就返回 None，不影响潮汐。"""
+    sky = soup.select_one(".calendarlist .value .skycon")
+    wind = soup.select_one(".calendarlist .value .column6")
+    if sky is None and wind is None:
+        return None
+    sky_box = sky.parent.get_text(" ", strip=True) if sky else ""
+    wind_level = _number(r"(\d+)\s*级", wind.get_text(" ", strip=True)) if wind else None
+    wind_dir, wave = "", None
+    for el in wind.select(".wind3") if wind else []:
+        text = el.get_text(strip=True)
+        if text.endswith("浪"):
+            wave = _number(r"(\d+(?:\.\d+)?)\s*米", text)
+        elif "风" in text:
+            wind_dir = text
+    return DayWeather(
+        sky=sky.get_text(strip=True) if sky else "",
+        air_temp=_number(r"气温\s*(-?\d+(?:\.\d+)?)", sky_box),
+        water_temp=_number(r"水温\s*(-?\d+(?:\.\d+)?)", sky_box),
+        pressure=_number(r"气压\s*(\d+(?:\.\d+)?)", sky_box),
+        wind_level=int(wind_level) if wind_level is not None else None,
+        wind_kmh=_number(r"(\d+(?:\.\d+)?)\s*km/h", wind.get_text(" ", strip=True)) if wind else None,
+        wind_dir=wind_dir,
+        wave_m=wave,
+    )
+
+
+def parse_page(html: str, day: date) -> DayPage:
+    soup = BeautifulSoup(html, "html.parser")
+    return DayPage(_extremes(soup, day), _weather(soup))
+
+
+def parse_extremes(html: str, day: date) -> list[TideExtreme]:
+    return parse_page(html, day).extremes
 
 
 class TidescnProvider:
@@ -111,12 +152,12 @@ class TidescnProvider:
                 self._last_request = time.monotonic()
         return decode_html(resp.content, resp.headers.get("content-type", ""))
 
-    def fetch_extremes(self, station: Station, day: date) -> list[TideExtreme]:
+    def fetch_day(self, station: Station, day: date) -> DayPage:
         if station.tidescn_id is None:
             raise ProviderError(f"{station.name} 还没有配置 tidescn 站点编号")
         if not self.available(day):
             raise ProviderError(f"tidescn 只提供今天起 {AVAILABLE_DAYS} 天内的潮汐，{day} 不在范围内")
-        return parse_extremes(self.fetch_html(station.tidescn_id, day), day)
+        return parse_page(self.fetch_html(station.tidescn_id, day), day)
 
 
 def main() -> None:
@@ -132,8 +173,10 @@ def main() -> None:
         out = args.save / f"tidescn_{args.tidescn_id}_{args.date}.html"
         out.write_text(html, encoding="utf-8")
         print(f"已保存 {out}")
-    for e in parse_extremes(html, args.date):
+    page = parse_page(html, args.date)
+    for e in page.extremes:
         print(f"{e.time:%H:%M}  {'高潮' if e.kind == 'high' else '低潮'}  {e.height:.2f} m")
+    print(page.weather)
 
 
 if __name__ == "__main__":

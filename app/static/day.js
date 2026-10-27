@@ -18,6 +18,36 @@
   if (data.astro.sunrise) night.push([{ xAxis: start }, { xAxis: ms(data.astro.sunrise) }]);
   if (data.astro.sunset) night.push([{ xAxis: ms(data.astro.sunset) }, { xAxis: end }]);
 
+  const sg = data.suggestion;
+  const clip = (t) => Math.min(Math.max(t, start), end);
+  const areas = night.slice();
+  const lines = [];
+  if (sg) {
+    areas.push([
+      {
+        xAxis: clip(ms(sg.window_start)),
+        itemStyle: { color: color("--window") },
+        label: { show: true, position: "insideTop", formatter: "赶海", color: color("--low") },
+      },
+      { xAxis: clip(ms(sg.window_end)) },
+    ]);
+    const leave = ms(sg.leave_by);
+    if (leave <= end) {
+      lines.push({
+        xAxis: leave,
+        lineStyle: { color: color("--big"), type: "solid" },
+        label: { formatter: "最晚离开", color: color("--big"), position: "insideEndTop" },
+      });
+    }
+  }
+  if (now >= start && now <= end) {
+    lines.push({
+      xAxis: now,
+      lineStyle: { color: color("--now"), type: "dashed" },
+      label: { formatter: "现在", color: color("--now") },
+    });
+  }
+
   const chart = echarts.init(el, null, { renderer: "svg" });
   chart.setOption({
     animation: false,
@@ -46,24 +76,21 @@
       data: data.curve.map(([t, h]) => [ms(t), h]),
       lineStyle: { width: 2.5, color: color("--sea") },
       areaStyle: { color: color("--sea-soft") },
-      markArea: { silent: true, itemStyle: { color: color("--night") }, data: night },
-      markLine: now >= start && now <= end ? {
-        silent: true, symbol: "none",
-        lineStyle: { color: color("--now"), type: "dashed" },
-        label: { formatter: "现在", color: color("--now") },
-        data: [{ xAxis: now }],
-      } : undefined,
+      markArea: { silent: true, itemStyle: { color: color("--night") }, data: areas },
+      markLine: lines.length ? { silent: true, symbol: "none", data: lines } : undefined,
       markPoint: {
         symbol: "circle", symbolSize: 8,
         label: {
           position: "top", color: color("--fg"), fontSize: 11,
+          backgroundColor: color("--card"), padding: [1, 2], borderRadius: 3,
           formatter: (p) => hm(p.value[0]) + "\n" + p.value[1].toFixed(2),
         },
         data: data.extremes.map((e) => ({
           coord: [ms(e.time), e.height],
           value: [ms(e.time), e.height],
           itemStyle: { color: e.kind === "high" ? color("--high") : color("--low") },
-          label: { position: e.kind === "high" ? "top" : "bottom" },
+          // 低潮标签放右侧，避免压到横轴刻度
+          label: e.kind === "high" ? { position: "top" } : { position: "right", distance: 6 },
         })),
       },
     }],

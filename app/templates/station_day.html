@@ -18,6 +18,7 @@
   <p class="muted center">
     {{ day.isoformat() }} {{ day|weekday }}{% if is_today %} · 今天{% endif %}
     {% if data %} · {{ data.astro.lunar.text }}{% if data.astro.lunar.jieqi %} · {{ data.astro.lunar.jieqi }}{% endif %}{% endif %}
+    · <a href="/calendar/{{ station.id }}">赶海日历</a>
   </p>
 </section>
 
@@ -28,6 +29,29 @@
   <p><a class="btn" href="?date={{ day.isoformat() }}">重试</a></p>
 </section>
 {% else %}
+
+{% set s = data.suggestion %}
+{% if s %}
+<section class="card advice level-{{ s.stars }}{% if s.verdict == '不宜赶海' %} veto{% endif %}">
+  <div class="advice-head">
+    <span class="stars" aria-label="{{ s.stars }} 星">{{ s.stars|stars }}</span>
+    <span class="verdict">{{ s.verdict }}</span>
+    <span class="score num">{{ s.score }} 分</span>
+  </div>
+  <dl class="window">
+    <div><dt>{% if s.night %}夜间{% endif %}最佳时段</dt><dd class="num">{{ s.window_start|hm }} – {{ s.window_end|hm }}</dd></div>
+    <div><dt>低潮</dt><dd class="num">{{ s.low.time|hm }} · {{ "%.2f"|format(s.low.height) }} m</dd></div>
+    <div><dt>开始返回</dt><dd class="num">{{ s.window_end|hm }}</dd></div>
+    <div class="must"><dt>最晚离开滩涂</dt><dd class="num">{{ s.leave_by|hm }}</dd></div>
+  </dl>
+  <ul class="reasons">
+    {% for r in s.reasons %}<li>{{ r }}</li>{% endfor %}
+  </ul>
+  <ul class="warnings">
+    {% for w in s.warnings %}<li>⚠️ {{ w }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 
 <section class="card">
   <div class="badges">
@@ -51,7 +75,25 @@
 <section class="card">
   <h2>潮汐曲线</h2>
   <div id="tide-chart" class="chart" role="img" aria-label="{{ station.name }} {{ day.isoformat() }} 潮汐曲线"></div>
-  <p class="muted small">阴影为夜间；曲线由高低潮时刻按余弦插值得到。</p>
+  <p class="muted small">绿色为最佳赶海时段，红线为最晚离开时间，灰色阴影为夜间。曲线由高低潮时刻按余弦插值得到。</p>
+</section>
+
+<section class="card">
+  <h2>天气风浪</h2>
+  {% set w = data.weather %}
+  {% if w %}
+  <dl class="astro">
+    <div><dt>天气</dt><dd>{{ w.sky or "--" }}</dd></div>
+    <div><dt>风</dt><dd>{{ w.wind_dir }}{% if w.wind_level is not none %} {{ w.wind_level }}级{% endif %}</dd></div>
+    <div><dt>浪高</dt><dd class="num">{{ "%g"|format(w.wave_m) ~ " m" if w.wave_m is not none else "--" }}</dd></div>
+    <div><dt>气温</dt><dd class="num">{{ "%.0f"|format(w.air_temp) ~ "°C" if w.air_temp is not none else "--" }}</dd></div>
+    <div><dt>水温</dt><dd class="num">{{ "%.0f"|format(w.water_temp) ~ "°C" if w.water_temp is not none else "--" }}</dd></div>
+    <div><dt>气压</dt><dd class="num">{{ "%.0f"|format(w.pressure) ~ " hPa" if w.pressure is not none else "--" }}</dd></div>
+  </dl>
+  <p class="muted small">预报更新于 {{ data.weather_time.strftime("%m-%d %H:%M") }}，出发前请再看一下实时天气。</p>
+  {% else %}
+  <p class="muted">暂无天气预报。</p>
+  {% endif %}
 </section>
 
 <section class="card">
