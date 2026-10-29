@@ -1,0 +1,9 @@
+{
+  "name": "item-manager",
+  "private": true,
+  "description": "物品管家微信小程序",
+  "scripts": {
+    "sync": "node scripts/sync-shared.js",
+    "test": "node --test \"tests/*.test.js\""
+  }
+}

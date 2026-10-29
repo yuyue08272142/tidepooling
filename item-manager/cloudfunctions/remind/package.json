@@ -1,0 +1,9 @@
+{
+  "name": "remind",
+  "version": "1.0.0",
+  "description": "每天检查消耗品，快用完时发订阅消息提醒",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.1"
+  }
+}

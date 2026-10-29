@@ -1,0 +1,5 @@
+.clear {
+  color: var(--muted);
+  font-size: 26rpx;
+  padding-left: 24rpx;
+}

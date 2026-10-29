@@ -1,0 +1,58 @@
+<view class="page" wx:if="{{item}}">
+  <swiper wx:if="{{item.photos.length}}" class="photos" indicator-dots="{{item.photos.length > 1}}" circular>
+    <swiper-item wx:for="{{item.photos}}" wx:key="*this">
+      <image class="photo" src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
+    </swiper-item>
+  </swiper>
+
+  <view class="card">
+    <view class="title">{{item.name}}</view>
+    <view wx:if="{{item.tags.length}}" class="tags head-tags">
+      <view wx:for="{{item.tags}}" wx:key="*this" class="tag {{item === '消耗品' ? 'consumable' : ''}}">{{item}}</view>
+    </view>
+    <view wx:if="{{item.note}}" class="note">{{item.note}}</view>
+  </view>
+
+  <view wx:if="{{consumable}}" class="card">
+    <view class="row">
+      <view class="grow">
+        <view class="prediction state-{{prediction.state}}">{{predictionText}}</view>
+        <view wx:if="{{basisText}}" class="muted basis">{{basisText}}</view>
+        <view wx:if="{{prediction.runOutDate && prediction.state !== 'empty'}}" class="muted basis">
+          使用中 {{prediction.usingCount}} · 库存 {{prediction.stockCount}} · 提前 {{remindDays}} 天提醒
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{canSubscribe}}" class="subscribe">
+      <view wx:if="{{item.remindSubscribed}}" class="muted">✅ 已订阅微信通知，快用完时会提醒你</view>
+      <view wx:else class="btn plain" bindtap="subscribe">🔔 订阅用完提醒</view>
+    </view>
+  </view>
+
+  <view class="row section-head">
+    <view class="section-title grow">对象（{{instances.length}}）</view>
+    <view class="mini-btn" bindtap="addInstance">+ 添加</view>
+  </view>
+
+  <view class="card instance row" wx:for="{{instances}}" wx:key="_id" data-id="{{item._id}}" bindtap="openInstance">
+    <view class="grow">
+      <view class="row">
+        <text class="no">#{{item.no}}</text>
+        <text class="status status-{{item.status}}">{{item.statusText}}</text>
+        <text wx:if="{{item.note}}" class="ellipsis grow inst-note">{{item.note}}</text>
+      </view>
+      <view class="muted detail">{{item.detail}}</view>
+    </view>
+    <view wx:if="{{item.status === 'stock'}}" class="mini-btn" data-id="{{item._id}}" catchtap="startUse">开始用</view>
+    <view wx:if="{{item.status === 'using'}}" class="mini-btn" data-id="{{item._id}}" catchtap="finishUse">用完了</view>
+  </view>
+
+  <view wx:if="{{!instances.length}}" class="muted empty-instances">
+    每买一个/一份就添加一个对象，记录开始使用和用完的日期
+  </view>
+
+  <view class="footer">
+    <view class="btn plain" bindtap="edit">编辑物品</view>
+    <view class="btn danger" bindtap="remove">删除物品</view>
+  </view>
+</view>

@@ -1,0 +1,17 @@
+{
+  "description": "物品管家：分组、照片、物品对象、消耗品用完提醒",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "projectname": "item-manager",
+  "libVersion": "3.5.8",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": true
+  },
+  "condition": {}
+}

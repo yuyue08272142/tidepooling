@@ -1,0 +1,64 @@
+<view class="page">
+  <view class="card">
+    <view class="form-item">
+      <view class="label">名称</view>
+      <input class="input" value="{{name}}" data-field="name" bindinput="onInput" placeholder="例如：洗衣液、卷纸、充电宝" />
+    </view>
+    <view class="form-item">
+      <view class="label">分组</view>
+      <picker range="{{groups}}" range-key="name" value="{{groupIndex}}" bindchange="onGroupChange">
+        <view class="picker-value {{groupIndex < 0 ? 'placeholder' : ''}}">
+          {{groupIndex < 0 ? '请选择分组' : groups[groupIndex].name}}
+        </view>
+      </picker>
+    </view>
+    <view class="form-item">
+      <view class="label">照片（{{photos.length}}/{{maxPhotos}}）</view>
+      <view class="photos">
+        <view class="photo-wrap" wx:for="{{photos}}" wx:key="*this">
+          <image class="photo" src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewPhoto" />
+          <view class="photo-del" data-src="{{item}}" catchtap="removePhoto">×</view>
+        </view>
+        <view wx:if="{{photos.length < maxPhotos}}" class="photo-wrap photo-add" bindtap="choosePhoto">+</view>
+      </view>
+    </view>
+    <view class="form-item">
+      <view class="label">备注</view>
+      <textarea class="textarea" value="{{note}}" data-field="note" bindinput="onInput" auto-height placeholder="放在哪、规格、购买渠道…" />
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="form-item">
+      <view class="label">标签（标记为“消耗品”可预测用完时间并提醒）</view>
+      <view class="tags">
+        <view
+          wx:for="{{tagOptions}}"
+          wx:key="name"
+          class="tag {{item.active ? 'active' : ''}}"
+          data-tag="{{item.name}}"
+          bindtap="toggleTag"
+        >{{item.name}}</view>
+      </view>
+      <view class="row custom-tag">
+        <input class="input grow" value="{{customTag}}" data-field="customTag" bindinput="onInput" bindconfirm="addCustomTag" placeholder="自定义标签" />
+        <view class="mini-btn" bindtap="addCustomTag">添加</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{consumable}}" class="card">
+    <view class="form-item">
+      <view class="label">默认可用天数（还没有用完记录时用它来预测，可不填）</view>
+      <input class="input" type="number" value="{{defaultDays}}" data-field="defaultDays" bindinput="onInput" placeholder="例如：一瓶洗衣液大约用 30 天" />
+    </view>
+    <view class="form-item">
+      <view class="label">提前几天提醒</view>
+      <input class="input" type="number" value="{{remindDaysBefore}}" data-field="remindDaysBefore" bindinput="onInput" />
+    </view>
+  </view>
+
+  <view class="footer">
+    <view class="btn" bindtap="save">保存</view>
+  </view>
+</view>

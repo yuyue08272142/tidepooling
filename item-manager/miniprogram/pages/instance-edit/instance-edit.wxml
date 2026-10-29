@@ -1,0 +1,44 @@
+<view class="page">
+  <view class="card">
+    <view wx:if="{{!id}}" class="form-item">
+      <view class="label">数量（一次买了多个可以一起添加）</view>
+      <input class="input" type="number" value="{{count}}" data-field="count" bindinput="onInput" />
+    </view>
+    <view class="form-item">
+      <view class="label">开始使用日期（不填表示还在库存里）</view>
+      <view class="row">
+        <picker class="grow" mode="date" value="{{startDate || today}}" end="{{today}}" data-field="startDate" bindchange="onDateChange">
+          <view class="picker-value {{startDate ? '' : 'placeholder'}}">{{startDate || '未开始'}}</view>
+        </picker>
+        <view wx:if="{{startDate}}" class="clear" data-field="startDate" bindtap="clearDate">清除</view>
+      </view>
+    </view>
+    <view class="form-item">
+      <view class="label">用完日期（不填表示还在用）</view>
+      <view class="row">
+        <picker
+          class="grow"
+          mode="date"
+          value="{{endDate || today}}"
+          start="{{startDate}}"
+          end="{{today}}"
+          disabled="{{!startDate}}"
+          data-field="endDate"
+          bindchange="onDateChange"
+        >
+          <view class="picker-value {{endDate ? '' : 'placeholder'}}">{{endDate || (startDate ? '还在用' : '请先选择开始日期')}}</view>
+        </picker>
+        <view wx:if="{{endDate}}" class="clear" data-field="endDate" bindtap="clearDate">清除</view>
+      </view>
+    </view>
+    <view class="form-item">
+      <view class="label">备注</view>
+      <input class="input" value="{{note}}" data-field="note" bindinput="onInput" placeholder="例如：放在主卫、某某牌 2L 装" />
+    </view>
+  </view>
+
+  <view class="footer">
+    <view class="btn" bindtap="save">保存</view>
+    <view wx:if="{{id}}" class="btn danger" bindtap="remove">删除</view>
+  </view>
+</view>

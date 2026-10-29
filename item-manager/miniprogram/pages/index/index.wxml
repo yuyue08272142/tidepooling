@@ -1,0 +1,36 @@
+<view class="page">
+  <block wx:if="{{reminders.length}}">
+    <view class="section-title">⏰ 即将用完</view>
+    <view class="card reminder row" wx:for="{{reminders}}" wx:key="id" data-id="{{item.id}}" bindtap="openItem">
+      <image wx:if="{{item.cover}}" class="reminder-cover" src="{{item.cover}}" mode="aspectFill" />
+      <view wx:else class="reminder-cover placeholder-cover">📦</view>
+      <view class="grow">
+        <view class="ellipsis">{{item.name}}</view>
+        <view class="reminder-text state-{{item.state}}">{{item.text}}</view>
+      </view>
+    </view>
+  </block>
+
+  <view class="section-title">分组（长按可重命名、删除）</view>
+  <view class="grid">
+    <view
+      class="group-card"
+      wx:for="{{groups}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      data-name="{{item.name}}"
+      bindtap="openGroup"
+      bindlongpress="groupActions"
+    >
+      <view class="group-name ellipsis">{{item.name}}</view>
+      <view class="group-count"><text class="count-num">{{item.itemCount}}</text> 种物品</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && !groups.length}}" class="empty">
+    <view>还没有分组</view>
+    <view>点右下角 + 新建一个，比如“厨房”“卫生间”</view>
+  </view>
+
+  <view class="fab" bindtap="addGroup">+</view>
+</view>

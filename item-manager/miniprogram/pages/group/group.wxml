@@ -1,0 +1,31 @@
+<view class="page">
+  <view wx:if="{{allTags.length > 1}}" class="tags filter">
+    <view
+      wx:for="{{allTags}}"
+      wx:key="*this"
+      class="tag {{activeTag === item ? 'active' : ''}}"
+      data-tag="{{item}}"
+      bindtap="toggleTag"
+    >{{item}}</view>
+  </view>
+
+  <view class="card item row" wx:for="{{shown}}" wx:key="id" data-id="{{item.id}}" bindtap="openItem">
+    <image wx:if="{{item.cover}}" class="cover" src="{{item.cover}}" mode="aspectFill" lazy-load />
+    <view wx:else class="cover placeholder-cover">📦</view>
+    <view class="grow">
+      <view class="name ellipsis">{{item.name}}</view>
+      <view class="muted">{{item.counts}}</view>
+      <view wx:if="{{item.consumable}}" class="prediction state-{{item.state}}">{{item.predictionText}}</view>
+      <view class="tags item-tags">
+        <view wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="tag {{tag === '消耗品' ? 'consumable' : ''}}">{{tag}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!loading && !items.length}}" class="empty">
+    <view>这个分组还没有物品</view>
+    <view>点右下角 + 添加</view>
+  </view>
+
+  <view class="fab" bindtap="addItem">+</view>
+</view>

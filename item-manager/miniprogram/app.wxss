@@ -1,0 +1,171 @@
+page {
+  --primary: #07c160;
+  --warn: #fa9d3b;
+  --danger: #fa5151;
+  --text: #1f2329;
+  --muted: #8a8f99;
+  --line: #ebedf0;
+  background: #f5f6f7;
+  color: var(--text);
+  font-size: 30rpx;
+}
+
+.page {
+  padding: 24rpx 24rpx 180rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  color: var(--muted);
+  margin: 24rpx 8rpx 16rpx;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 120rpx 0;
+  line-height: 1.8;
+}
+
+/* 标签 */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 24rpx;
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  margin: 0 12rpx 12rpx 0;
+  background: #f0f1f3;
+  color: #50555c;
+}
+
+.tag.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.tag.consumable {
+  background: #fff3e6;
+  color: #d9730d;
+}
+
+/* 状态色 */
+.state-ok { color: var(--primary); }
+.state-soon { color: var(--warn); }
+.state-out, .state-empty { color: var(--danger); }
+.state-none, .state-unknown { color: var(--muted); }
+
+/* 按钮 */
+.btn {
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  padding: 22rpx 0;
+  text-align: center;
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn.plain {
+  background: #fff;
+  color: var(--text);
+  border: 1rpx solid var(--line);
+}
+
+.btn.danger {
+  background: #fff;
+  color: var(--danger);
+  border: 1rpx solid var(--line);
+}
+
+.btn + .btn {
+  margin-top: 20rpx;
+}
+
+.mini-btn {
+  font-size: 24rpx;
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--primary);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.fab {
+  position: fixed;
+  right: 40rpx;
+  bottom: calc(60rpx + env(safe-area-inset-bottom));
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 64rpx;
+  line-height: 108rpx;
+  text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.35);
+}
+
+/* 表单 */
+.form-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-size: 26rpx;
+  color: var(--muted);
+  margin-bottom: 14rpx;
+}
+
+.input {
+  font-size: 30rpx;
+  min-height: 48rpx;
+}
+
+.picker-value {
+  font-size: 30rpx;
+  min-height: 48rpx;
+}
+
+.placeholder {
+  color: #c0c4cc;
+}
+
+.footer {
+  margin-top: 40rpx;
+}

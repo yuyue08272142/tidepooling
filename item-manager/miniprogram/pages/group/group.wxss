@@ -1,0 +1,43 @@
+.filter {
+  margin-bottom: 12rpx;
+}
+
+.item {
+  align-items: flex-start;
+}
+
+.cover {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 14rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.placeholder-cover {
+  background: #f0f1f3;
+  text-align: center;
+  line-height: 150rpx;
+  font-size: 56rpx;
+}
+
+.name {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.prediction {
+  font-size: 26rpx;
+  margin-top: 8rpx;
+}
+
+.item-tags {
+  margin-top: 14rpx;
+}
+
+.item-tags .tag {
+  font-size: 22rpx;
+  padding: 2rpx 14rpx;
+  margin-bottom: 0;
+}
